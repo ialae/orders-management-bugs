@@ -17,7 +17,7 @@ A few categories to keep in mind while you look:
 
 When you believe you've found and fixed a bug, make sure you can explain: what was wrong, why it was wrong, and how your fix addresses the root cause (not just the symptom you happened to notice).
 
-> **A friendly note.** In our next meeting, we'll chat about a few of the bugs you fixed: what was wrong, how you spotted it, why your fix makes sense. Nothing to stress about, just a normal conversation about your own work. Feel free to use AI tools along the way if that's how you like to work, just make sure you understand what you're submitting well enough to talk through it comfortably. That's really all we're looking for.
+> **Note.** In our next meeting, we'll go through a few of the bugs you fixed: what was wrong, how you found it, and why your fix works. You're welcome to use AI tools as part of your process, but make sure you understand what you're submitting well enough to explain it clearly. That understanding is what we're evaluating.
 
 ## Stack
 

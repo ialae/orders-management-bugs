@@ -90,6 +90,8 @@ export default function OrdersPage() {
     setPage(1)
     setDateFrom('')
     setDateTo('')
+    setClientFilter('')
+    setStatusFilter('')
   }
 
   return (

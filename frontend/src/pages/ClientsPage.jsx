@@ -118,7 +118,7 @@ export default function ClientsPage() {
             ) : (
               clients.map((client) => (
                 <tr key={client.id}>
-                  <td dangerouslySetInnerHTML={{ __html: client.name }} />
+                  <td>{client.name}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>

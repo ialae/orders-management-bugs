@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, text
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,10 @@ def list_clients(
 
     if search:
         query = query.filter(
-            text(f"clients.name ILIKE '%{search}%' AND clients.email ILIKE '%{search}%'")
+            or_(
+                Client.name.ilike(f"%{search}%"),
+                Client.email.ilike(f"%{search}%")
+            )
         )
 
     total = query.count()

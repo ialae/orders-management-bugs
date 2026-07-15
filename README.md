@@ -107,16 +107,20 @@ docker-compose.yml
 
 ## Submitting
 
-Don't fork this repo. Instead, create a new branch directly on it, named after you: your first and last name, lowercase, with spaces replaced by dashes.
+1. **Fork this repository** to your own GitHub account (the **Fork** button, top right of this page on GitHub).
+2. Clone your fork and create a branch named after you: your first and last name, lowercase, with spaces replaced by dashes.
 
-Examples:
+   Examples:
 
-- Jane Doe → `jane-doe`
-- Karim El Amrani → `karim-el-amrani`
-- Maria Garcia-Lopez → `maria-garcia-lopez`
+   - Jane Doe → `jane-doe`
+   - Karim El Amrani → `karim-el-amrani`
+   - Maria Garcia-Lopez → `maria-garcia-lopez`
 
-```
-git checkout -b your-name-here
-```
+   ```
+   git checkout -b your-name-here
+   ```
 
-Commit your fixes to that branch and push it. We'll check your branch after the deadline you were informed of, so make sure everything you want reviewed is pushed before then.
+3. Commit your fixes to that branch and push it to your fork.
+4. Open a pull request from your branch back to this repository (`ialae/orders-management-bugs`, `main`).
+
+We'll review pull requests after the deadline you were informed of, so make sure yours is open before then.

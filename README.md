@@ -107,4 +107,16 @@ docker-compose.yml
 
 ## Submitting
 
-Push your fixes to a fork or branch and share it with whoever gave you this assessment, along with a short summary of what you found and fixed.
+Don't fork this repo. Instead, create a new branch directly on it, named after you: your first and last name, lowercase, with spaces replaced by dashes.
+
+Examples:
+
+- Jane Doe → `jane-doe`
+- Karim El Amrani → `karim-el-amrani`
+- Maria Garcia-Lopez → `maria-garcia-lopez`
+
+```
+git checkout -b your-name-here
+```
+
+Commit your fixes to that branch, push it, and share it with whoever gave you this assessment along with a short summary of what you found and fixed.

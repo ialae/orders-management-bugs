@@ -57,6 +57,7 @@ def _ensure_client_exists(db: Session, client_id: int) -> None:
 
 @router.post("", response_model=OrderOut, status_code=201)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
+    _ensure_client_exists(db, payload.client_id)
     order = Order(**payload.model_dump())
     db.add(order)
     db.commit()
@@ -69,6 +70,8 @@ def update_order(order_id: int, payload: OrderUpdate, db: Session = Depends(get_
     order = db.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    _ensure_client_exists(db, payload.client_id)
 
     for key, value in payload.model_dump().items():
         setattr(order, key, value)

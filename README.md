@@ -119,4 +119,4 @@ Examples:
 git checkout -b your-name-here
 ```
 
-Commit your fixes to that branch, push it, and share it with whoever gave you this assessment along with a short summary of what you found and fixed.
+Commit your fixes to that branch and push it. We'll check your branch after the deadline you were informed of, so make sure everything you want reviewed is pushed before then.

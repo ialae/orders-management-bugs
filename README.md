@@ -17,7 +17,7 @@ A few categories to keep in mind while you look:
 
 When you believe you've found and fixed a bug, make sure you can explain: what was wrong, why it was wrong, and how your fix addresses the root cause (not just the symptom you happened to notice).
 
-> **Important note.** In our next meeting, we'll likely go through a handful of the bugs you fixed and ask you to walk us through them: what was wrong, how you found it, why your fix works. This is meant to be a normal conversation about your own work, not a trick — but it also means it's easy to tell when someone can't actually explain a fix they submitted. Using AI tools to help you think, research, or write code is fine; what won't hold up is submitting fixes you can't personally explain, because that gap shows immediately in conversation and will disqualify your submission. Do the work in a way you can stand behind.
+> **A friendly note.** In our next meeting, we'll chat about a few of the bugs you fixed: what was wrong, how you spotted it, why your fix makes sense. Nothing to stress about, just a normal conversation about your own work. Feel free to use AI tools along the way if that's how you like to work, just make sure you understand what you're submitting well enough to talk through it comfortably. That's really all we're looking for.
 
 ## Stack
 

@@ -42,18 +42,29 @@ You only need **Docker Desktop** installed and running. No local Python, Node, o
 
    If that prints a version number, you're good. If it errors, Docker Desktop isn't running yet — open the app and wait for it to fully start, then try again.
 
-### Step 1: Get the code onto your machine
+### Step 1: Fork and clone the repo
 
-Pick whichever of these you're comfortable with:
+You'll need [Git](https://git-scm.com/downloads) installed for this (you'll also need it later to submit your work, so it's worth having either way).
 
-- **With Git installed** — open a terminal anywhere you keep projects and run:
+1. Fork this repository to your own GitHub account: click **Fork** at the top right of [github.com/ialae/orders-management-bugs](https://github.com/ialae/orders-management-bugs).
+2. Clone your fork (replace `YOUR-USERNAME` with your actual GitHub username) and move into the folder:
 
-  ```
-  git clone https://github.com/ialae/orders-management-bugs.git
-  cd orders-management-bugs
-  ```
+   ```
+   git clone https://github.com/YOUR-USERNAME/orders-management-bugs.git
+   cd orders-management-bugs
+   ```
 
-- **Without Git** — go to [github.com/ialae/orders-management-bugs](https://github.com/ialae/orders-management-bugs), click the green **Code** button, choose **Download ZIP**, then unzip it and open a terminal inside the unzipped folder (the one containing `docker-compose.yml`).
+3. Create a branch named after you: your first and last name, lowercase, with spaces replaced by dashes.
+
+   Examples:
+
+   - Jane Doe → `jane-doe`
+   - Karim El Amrani → `karim-el-amrani`
+   - Maria Garcia-Lopez → `maria-garcia-lopez`
+
+   ```
+   git checkout -b your-name-here
+   ```
 
 ### Step 2: Start the app
 
@@ -107,20 +118,12 @@ docker-compose.yml
 
 ## Submitting
 
-1. **Fork this repository** to your own GitHub account (the **Fork** button, top right of this page on GitHub).
-2. Clone your fork and create a branch named after you: your first and last name, lowercase, with spaces replaced by dashes.
+Commit your fixes to your branch (the one named after you, from Step 1) and push it to your fork:
 
-   Examples:
+```
+git push origin your-name-here
+```
 
-   - Jane Doe → `jane-doe`
-   - Karim El Amrani → `karim-el-amrani`
-   - Maria Garcia-Lopez → `maria-garcia-lopez`
-
-   ```
-   git checkout -b your-name-here
-   ```
-
-3. Commit your fixes to that branch and push it to your fork.
-4. Open a pull request from your branch back to this repository (`ialae/orders-management-bugs`, `main`).
+Then open a pull request from your branch back to this repository (`ialae/orders-management-bugs`, `main`). GitHub will show a **Compare & pull request** button on your fork once you've pushed.
 
 We'll review pull requests after the deadline you were informed of, so make sure yours is open before then.

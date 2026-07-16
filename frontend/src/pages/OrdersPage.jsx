@@ -88,6 +88,8 @@ export default function OrdersPage() {
 
   function resetFilters() {
     setPage(1)
+    setClientFilter('')
+    setStatusFilter('')
     setDateFrom('')
     setDateTo('')
   }

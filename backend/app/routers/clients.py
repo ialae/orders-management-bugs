@@ -47,7 +47,7 @@ def list_client_options(db: Session = Depends(get_db)):
 @router.get("/{client_id}", response_model=ClientOut)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
-    
+
     if not client:
        raise HTTPException(status_code=404, detail="Client not found")
     return client
@@ -72,8 +72,8 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-    client.name = payload.name
-    client.email = payload.email
+    for key, value in payload.model_dump().items():
+        setattr(client, key, value)
 
     try:
         db.commit()

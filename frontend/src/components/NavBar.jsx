@@ -5,10 +5,10 @@ export default function NavBar() {
     <header className="navbar">
       <div className="navbar-brand">Orders Management</div>
       <nav className="navbar-links">
-        <NavLink to="/clients" className="active">
+        <NavLink to="/clients" className={({ isActive }) => (isActive ? 'active' : '')}>
           Clients
         </NavLink>
-        <NavLink to="/orders" className="active">
+        <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>
           Orders
         </NavLink>
       </nav>

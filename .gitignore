@@ -8,3 +8,7 @@ dist/
 
 .env
 .DS_Store
+
+BUGS.md
+BUGS_DOCS.md
+ROADMAP.md

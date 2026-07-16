@@ -51,4 +51,4 @@ class Order(Base):
 
     @property
     def total(self) -> float:
-        return float(self.unit_price) + self.quantity
+        return float(self.unit_price) * self.quantity

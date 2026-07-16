@@ -27,7 +27,7 @@ def list_clients(
     items = (
         query.order_by(Client.created_at.desc())
         .offset((page - 1) * page_size)
-        .limit(10)
+        .limit(page_size)
         .all()
     )
 

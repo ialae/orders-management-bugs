@@ -24,10 +24,12 @@ def list_orders(
 
     if client_id is not None:
         query = query.filter(Order.client_id == client_id)
+    if status is not None:
+        query = query.filter(Order.status == status)
     if date_from is not None:
-        query = query.filter(Order.order_date <= date_from)
+        query = query.filter(Order.order_date >= date_from)
     if date_to is not None:
-        query = query.filter(Order.order_date >= date_to)
+        query = query.filter(Order.order_date <= date_to)
 
     total = query.count()
     items = (

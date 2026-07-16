@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+# pyrefly: ignore [missing-import]
+from fastapi import APIRouter, Depends, HTTPException , Query
 from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -13,8 +14,8 @@ router = APIRouter(prefix="/api/clients", tags=["clients"])
 @router.get("", response_model=ClientListOut)
 def list_clients(
     search: str | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     query = db.query(Client)
@@ -26,12 +27,12 @@ def list_clients(
                 Client.email.ilike(f"%{search}%"),
             )
         )
-
+        
     total = query.count()
     items = (
         query.order_by(Client.created_at.desc())
         .offset((page - 1) * page_size)
-        .limit(10)
+        .limit(page_size)
         .all()
     )
 

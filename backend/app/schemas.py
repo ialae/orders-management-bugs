@@ -6,10 +6,12 @@ from app.models import OrderStatus
 
 
 class ClientBase(BaseModel):
-    name: str
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=255)
     email: EmailStr
     phone: str | None = Field(default=None, max_length=50)
-    address: str | None = None
+    address: str | None = Field(default=None, max_length=500)
 
 
 class ClientCreate(ClientBase):
@@ -35,6 +37,8 @@ class ClientOption(BaseModel):
 
 
 class ClientListOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     items: list[ClientOut]
     total: int
     page: int
@@ -42,10 +46,12 @@ class ClientListOut(BaseModel):
 
 
 class OrderBase(BaseModel):
-    client_id: int
-    product_name: str
-    quantity: int
-    unit_price: float
+    model_config = ConfigDict(extra="forbid")
+
+    client_id: int = Field(gt=0)
+    product_name: str = Field(min_length=1, max_length=255)
+    quantity: int = Field(gt=0)
+    unit_price: float = Field(gt=0)
     status: OrderStatus = OrderStatus.pending
     order_date: date
 
@@ -68,6 +74,8 @@ class OrderOut(OrderBase):
 
 
 class OrderListOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     items: list[OrderOut]
     total: int
     page: int

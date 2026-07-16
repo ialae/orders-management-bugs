@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Query
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -12,9 +13,9 @@ router = APIRouter(prefix="/api/clients", tags=["clients"])
 
 @router.get("", response_model=ClientListOut)
 def list_clients(
-    search: str | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    search: str | None = Query(default=None, max_length=255),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     query = db.query(Client)

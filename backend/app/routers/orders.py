@@ -1,6 +1,7 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -12,14 +13,17 @@ router = APIRouter(prefix="/api/orders", tags=["orders"])
 
 @router.get("", response_model=OrderListOut)
 def list_orders(
-    client_id: int | None = None,
+    client_id: int | None = Query(default=None, gt=0),
     status: OrderStatus | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
+    if date_from is not None and date_to is not None and date_from > date_to:
+        raise HTTPException(status_code=400, detail="date_from cannot be after date_to")
+
     query = db.query(Order).options(joinedload(Order.client))
 
     if client_id is not None:
@@ -62,7 +66,11 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
     _ensure_client_exists(db, payload.client_id)
     order = Order(**payload.model_dump())
     db.add(order)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Unable to create order")
     db.refresh(order)
     return order
 
@@ -77,7 +85,11 @@ def update_order(order_id: int, payload: OrderUpdate, db: Session = Depends(get_
     for key, value in payload.model_dump().items():
         setattr(order, key, value)
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Unable to update order")
     db.refresh(order)
     return order
 

@@ -42,6 +42,8 @@ def list_client_options(db: Session = Depends(get_db)):
 @router.get("/{client_id}", response_model=ClientOut)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
     return client
 
 

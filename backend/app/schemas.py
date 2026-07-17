@@ -4,12 +4,13 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models import OrderStatus
 
+from typing import Annotated
 
 class ClientBase(BaseModel):
-    name: str
-    email: EmailStr
+    name: str = Field(..., max_length=255)
+    email: Annotated[EmailStr, Field(max_length=255)]
     phone: str | None = Field(default=None, max_length=50)
-    address: str | None = None
+    address: str | None = Field(default=None, max_length=500)
 
 
 class ClientCreate(ClientBase):
@@ -43,7 +44,7 @@ class ClientListOut(BaseModel):
 
 class OrderBase(BaseModel):
     client_id: int
-    product_name: str
+    product_name: str = Field(..., max_length=255)
     quantity: int
     unit_price: float
     status: OrderStatus = OrderStatus.pending

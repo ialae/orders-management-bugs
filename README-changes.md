@@ -16,6 +16,7 @@ The goal of these changes was to make the app start reliably, keep the container
 - Added `PYTHONDONTWRITEBYTECODE` and `PYTHONUNBUFFERED` for cleaner container behavior. These settings stop Python from creating unnecessary bytecode files and make logs appear immediately in container output.
 - Upgraded `pip` before installing dependencies. That reduces the risk of hitting old packaging bugs during image builds.
 - Added [backend/.dockerignore](backend/.dockerignore) so build context does not include caches, virtual environments, or local env files. Keeping those files out of the image makes builds faster and reduces accidental leakage of local state.
+- Disabled Uvicorn access logs in the backend container so the repeated healthcheck requests do not spam the terminal output. That keeps the logs readable while leaving the healthcheck itself in place.
 
 ## Frontend Dockerfile
 

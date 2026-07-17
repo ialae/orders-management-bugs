@@ -28,6 +28,8 @@ def list_orders(
        query = query.filter(Order.order_date >= date_from)
     if date_to:
        query = query.filter(Order.order_date <= date_to)
+    if status is not None:
+       query = query.filter(Order.status == status)
 
     total = query.count()
     items = (

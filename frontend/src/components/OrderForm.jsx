@@ -87,6 +87,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
               name="product_name"
               value={form.product_name}
               onChange={handleChange}
+              maxLength={255}
               required
             />
           </label>

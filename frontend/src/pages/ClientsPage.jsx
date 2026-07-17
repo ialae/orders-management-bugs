@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { clientsApi } from '../api.js'
 import ClientForm from '../components/ClientForm.jsx'
 import Pagination from '../components/Pagination.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import DetailModal from '../components/DetailModal.jsx'
 
 const PAGE_SIZE = 10
 
@@ -16,6 +18,8 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deletingClient, setDeletingClient] = useState(null)
+  const [viewingClient, setViewingClient] = useState(null)
 
   async function loadClients() {
     setLoading(true)
@@ -61,8 +65,9 @@ export default function ClientsPage() {
     }
   }
 
-  async function handleDelete(client) {
-    await clientsApi.remove(client.id)
+  async function handleDelete() {
+    await clientsApi.remove(deletingClient.id)
+    setDeletingClient(null)
     await loadClients()
   }
 
@@ -115,19 +120,22 @@ export default function ClientsPage() {
             ) : (
               clients.map((client) => (
                 <tr key={client.id}>
-                  <td dangerouslySetInnerHTML={{ __html: client.name }} />
+                  <td>{client.name}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>
                   <td>{new Date(client.created_at).toLocaleDateString()}</td>
                   <td className="actions-cell">
+                    <button type="button" className="btn-link" onClick={() => setViewingClient(client)}>
+                      View
+                    </button>
                     <button type="button" className="btn-link" onClick={() => openEditForm(client)}>
                       Edit
                     </button>
                     <button
                       type="button"
                       className="btn-link btn-link-danger"
-                      onClick={() => handleDelete(client)}
+                      onClick={() => setDeletingClient(client)}
                     >
                       Delete
                     </button>
@@ -147,6 +155,27 @@ export default function ClientsPage() {
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}
+        />
+      )}
+      {deletingClient && (
+        <ConfirmDialog
+          title="Delete Client"
+          message={`Are you sure you want to delete ${deletingClient.name}?`}
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingClient(null)}
+        />
+      )}
+      {viewingClient && (
+        <DetailModal
+          title="Client Details"
+          fields={[
+            { label: 'Name', value: viewingClient.name },
+            { label: 'Email', value: viewingClient.email },
+            { label: 'Phone', value: viewingClient.phone },
+            { label: 'Address', value: viewingClient.address },
+            { label: 'Created', value: new Date(viewingClient.created_at).toLocaleDateString() },
+          ]}
+          onClose={() => setViewingClient(null)}
         />
       )}
     </div>

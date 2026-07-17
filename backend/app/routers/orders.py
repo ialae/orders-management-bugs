@@ -24,15 +24,17 @@ def list_orders(
 
     if client_id is not None:
         query = query.filter(Order.client_id == client_id)
-    if date_from is not None:
-        query = query.filter(Order.order_date <= date_from)
-    if date_to is not None:
-        query = query.filter(Order.order_date >= date_to)
+    if date_from:
+       query = query.filter(Order.order_date >= date_from)
+    if date_to:
+       query = query.filter(Order.order_date <= date_to)
+    if status is not None:
+       query = query.filter(Order.status == status)
 
     total = query.count()
     items = (
         query.order_by(Order.id.asc())
-        .offset(page * page_size)
+        .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
     )
@@ -57,6 +59,8 @@ def _ensure_client_exists(db: Session, client_id: int) -> None:
 
 @router.post("", response_model=OrderOut, status_code=201)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
+    _ensure_client_exists(db, payload.client_id)
+    
     order = Order(**payload.model_dump())
     db.add(order)
     db.commit()

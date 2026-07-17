@@ -35,16 +35,18 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
         <form onSubmit={handleSubmit}>
           <label>
             Name
-            <input name="name" value={form.name} onChange={handleChange} required />
+            <input name="name" value={form.name} onChange={handleChange} maxLength={255} required />
           </label>
-          <span className="field-label">Email</span>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+          <label className="field-label">
+            Email
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </label>
           <label>
             Phone
             <input name="phone" value={form.phone || ''} onChange={handleChange} />

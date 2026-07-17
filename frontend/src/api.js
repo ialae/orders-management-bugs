@@ -11,7 +11,12 @@ async function request(path, options = {}) {
     try {
       const body = await res.json()
       if (body?.detail) {
-        detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+        if (Array.isArray(body.detail)) {
+          detail = body.detail.map(err => err.msg).join(', ')
+        } else {
+          detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+        }
+
       }
     } catch {
       // response had no JSON body

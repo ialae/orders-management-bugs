@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, text
+# pyrefly: ignore [missing-import]
+from fastapi import APIRouter, Depends, HTTPException , Query
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -13,22 +14,25 @@ router = APIRouter(prefix="/api/clients", tags=["clients"])
 @router.get("", response_model=ClientListOut)
 def list_clients(
     search: str | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     query = db.query(Client)
 
     if search:
         query = query.filter(
-            text(f"clients.name ILIKE '%{search}%' AND clients.email ILIKE '%{search}%'")
+            or_(
+                Client.name.ilike(f"%{search}%"),
+                Client.email.ilike(f"%{search}%"),
+            )
         )
-
+        
     total = query.count()
     items = (
         query.order_by(Client.created_at.desc())
         .offset((page - 1) * page_size)
-        .limit(10)
+        .limit(page_size)
         .all()
     )
 
@@ -43,6 +47,9 @@ def list_client_options(db: Session = Depends(get_db)):
 @router.get("/{client_id}", response_model=ClientOut)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
+
+    if not client:
+       raise HTTPException(status_code=404, detail="Client not found")
     return client
 
 
@@ -65,8 +72,8 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-    client.name = payload.name
-    client.email = payload.email
+    for key, value in payload.model_dump().items():
+        setattr(client, key, value)
 
     try:
         db.commit()

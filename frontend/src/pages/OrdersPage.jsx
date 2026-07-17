@@ -4,6 +4,7 @@ import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import OrderForm from '../components/OrderForm.jsx'
 import Pagination from '../components/Pagination.jsx'
 import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
+import DetailModal from '../components/DetailModal.jsx'
 
 const PAGE_SIZE = 10
 
@@ -24,6 +25,7 @@ export default function OrdersPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deletingOrder, setDeletingOrder] = useState(null)
+  const [viewingOrder, setViewingOrder] = useState(null)
 
   useEffect(() => {
     clientsApi.options().then(setClientOptions).catch((err) => setError(err.message))
@@ -86,11 +88,13 @@ export default function OrdersPage() {
     await loadOrders()
   }
 
-  function resetFilters() {
-    setPage(1)
-    setDateFrom('')
-    setDateTo('')
-  }
+  const resetFilters = () => {
+    setDateFrom('');
+    setDateTo('');
+    setClientFilter('');
+    setStatusFilter('');
+    setPage(1);
+  };
 
   return (
     <div>
@@ -205,6 +209,9 @@ export default function OrdersPage() {
                   </td>
                   <td>{new Date(order.order_date).toLocaleDateString()}</td>
                   <td className="actions-cell">
+                    <button type="button" className="btn-link" onClick={() => setViewingOrder(order)}>
+                      View
+                    </button>
                     <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
                       Edit
                     </button>
@@ -241,6 +248,21 @@ export default function OrdersPage() {
           message={`Are you sure you want to delete this order for ${deletingOrder.client_name}?`}
           onConfirm={handleDelete}
           onCancel={() => setDeletingOrder(null)}
+        />
+      )}
+      {viewingOrder && (
+        <DetailModal
+          title="Order Details"
+          fields={[
+            { label: 'Client', value: viewingOrder.client_name },
+            { label: 'Product', value: viewingOrder.product_name },
+            { label: 'Quantity', value: viewingOrder.quantity },
+            { label: 'Unit Price', value: `$${Number(viewingOrder.unit_price).toFixed(2)}` },
+            { label: 'Total', value: `$${Number(viewingOrder.total).toFixed(2)}` },
+            { label: 'Status', value: STATUS_LABELS[viewingOrder.status] },
+            { label: 'Order Date', value: new Date(viewingOrder.order_date).toLocaleDateString() },
+          ]}
+          onClose={() => setViewingOrder(null)}
         />
       )}
     </div>

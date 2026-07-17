@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+import os
 from app.database import Base, SessionLocal, engine
 from app.routers import clients, orders
 from app.seed import seed_if_empty
 
-SECRET_KEY = "dev-secret-please-change-12345"
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is required")
 
 app = FastAPI(title="Orders Management API", debug=True)
 

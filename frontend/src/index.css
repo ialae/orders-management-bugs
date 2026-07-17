@@ -239,13 +239,13 @@ tbody tr:hover {
 }
 
 .status-shipped {
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: #d1fae5;
+  color: #065f46;
 }
 
 .status-cancelled {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 .modal-overlay {

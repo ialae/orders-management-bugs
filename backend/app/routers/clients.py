@@ -58,7 +58,7 @@ def create_client(payload: ClientCreate, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="A client with this email already exists")
+        raise HTTPException(status_code=409, detail="A client with this email or phone already exists")
     db.refresh(client)
     return client
 
@@ -78,7 +78,7 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="A client with this email already exists")
+        raise HTTPException(status_code=409, detail="A client with this email or phone already exists")
     db.refresh(client)
     return client
 

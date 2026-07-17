@@ -59,6 +59,8 @@ def _ensure_client_exists(db: Session, client_id: int) -> None:
 
 @router.post("", response_model=OrderOut, status_code=201)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
+    _ensure_client_exists(db, payload.client_id)
+    
     order = Order(**payload.model_dump())
     db.add(order)
     db.commit()

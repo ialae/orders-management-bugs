@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { clientsApi, ordersApi } from '../api.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import OrderForm from '../components/OrderForm.jsx'
@@ -29,7 +29,7 @@ export default function OrdersPage() {
     clientsApi.options().then(setClientOptions).catch((err) => setError(err.message))
   }, [])
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -48,12 +48,11 @@ export default function OrdersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [clientFilter, dateFrom, dateTo, page, statusFilter])
 
   useEffect(() => {
     loadOrders()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, clientFilter, statusFilter, dateFrom, dateTo])
+  }, [loadOrders])
 
   function openCreateForm() {
     setEditingOrder(null)
@@ -81,13 +80,20 @@ export default function OrdersPage() {
   }
 
   async function handleDelete() {
-    await ordersApi.remove(deletingOrder.id)
-    setDeletingOrder(null)
-    await loadOrders()
+    setError('')
+    try {
+      await ordersApi.remove(deletingOrder.id)
+      setDeletingOrder(null)
+      await loadOrders()
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   function resetFilters() {
     setPage(1)
+    setClientFilter('')
+    setStatusFilter('')
     setDateFrom('')
     setDateTo('')
   }

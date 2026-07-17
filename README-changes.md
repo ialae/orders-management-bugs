@@ -22,6 +22,23 @@ The goal of these changes was to make the app start reliably, keep the container
 - Kept the Vite dev server container entrypoint. That preserves the current local-development workflow instead of switching the app to a production static server.
 - Made `npm install` quieter with `--no-audit` and `--no-fund`. Those flags do not change behavior, but they reduce unnecessary output when the container is built.
 
+## Frontend Security Fixes
+
+- Removed the raw HTML rendering from the clients table and let React render the name as plain text instead. That closes the XSS-style risk from trusting server data as HTML.
+
+## Frontend Quality Fixes
+
+- Made the API base URL explicit by requiring `VITE_API_URL` instead of silently falling back to a hardcoded localhost value. That keeps configuration intentional and avoids accidental environment drift.
+- Fixed the navigation links so only the active route is highlighted. The old code marked every link as active, which made the UI misleading.
+- Corrected pagination to use `Math.ceil` so the last partial page is counted properly.
+- Removed the hook lint suppressions by memoizing the data loaders and using them in the effects directly. That keeps dependency handling honest instead of bypassing the lint rule.
+- Tightened the filter reset and delete flows so they clear the full filter state and surface request errors instead of failing silently.
+
+## Frontend Form Hardening
+
+- Synced the client and order forms with backend limits by adding explicit field lengths and matching numeric bounds. That keeps the browser-side validation aligned with the server and reduces avoidable round-trips.
+- Added effect-driven form state resets so the modal forms stay in sync if their source values change while the component is mounted.
+
 ## Backend API fixes
 
 - Fixed client search to use safe SQLAlchemy filters instead of string-built SQL. This prevents injection-prone query building and lets the ORM handle escaping properly.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { clientsApi } from '../api.js'
 import ClientForm from '../components/ClientForm.jsx'
 import Pagination from '../components/Pagination.jsx'
@@ -17,7 +17,7 @@ export default function ClientsPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  async function loadClients() {
+  const loadClients = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -29,12 +29,11 @@ export default function ClientsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, search])
 
   useEffect(() => {
     loadClients()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search])
+  }, [loadClients])
 
   function openCreateForm() {
     setEditingClient(null)
@@ -62,8 +61,13 @@ export default function ClientsPage() {
   }
 
   async function handleDelete(client) {
-    await clientsApi.remove(client.id)
-    await loadClients()
+    setError('')
+    try {
+      await clientsApi.remove(client.id)
+      await loadClients()
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -115,7 +119,7 @@ export default function ClientsPage() {
             ) : (
               clients.map((client) => (
                 <tr key={client.id}>
-                  <td dangerouslySetInnerHTML={{ __html: client.name }} />
+                  <td>{client.name}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>

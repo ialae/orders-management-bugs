@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
 
 function toFormValues(order) {
@@ -25,6 +25,11 @@ function toFormValues(order) {
 export default function OrderForm({ order, clientOptions, onSave, onCancel, saving }) {
   const [form, setForm] = useState(toFormValues(order))
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    setForm(toFormValues(order))
+    setError('')
+  }, [order])
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -88,6 +93,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
               value={form.product_name}
               onChange={handleChange}
               required
+              maxLength={255}
             />
           </label>
           <label>
@@ -96,6 +102,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
               type="number"
               name="quantity"
               min="1"
+              step="1"
               value={form.quantity}
               onChange={handleChange}
               required
@@ -106,7 +113,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
             <input
               type="number"
               name="unit_price"
-              min="0"
+              min="0.01"
               step="0.01"
               value={form.unit_price}
               onChange={handleChange}

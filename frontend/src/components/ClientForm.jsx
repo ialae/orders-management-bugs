@@ -25,8 +25,15 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
       return
     }
 
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      address: form.address.trim(),
+    }
+
     try {
-      await onSave(form)
+      await onSave(payload)
     } catch (err) {
       setError(err.message)
     }

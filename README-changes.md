@@ -25,7 +25,8 @@ The goal of these changes was to make the app start reliably, keep the container
 ## Frontend Dockerfile
 
 - Kept the Vite dev server container entrypoint. That preserves the current local-development workflow instead of switching the app to a production static server.
-- Made `npm install` quieter with `--no-audit` and `--no-fund`. Those flags do not change behavior, but they reduce unnecessary output when the container is built.
+- Switched the container install step to `npm ci` with `--no-audit` and `--no-fund` now that a lockfile exists. That makes the build reproducible and keeps the dependency tree aligned with the checked-in lockfile.
+- Added [frontend/package-lock.json](frontend/package-lock.json) so the frontend dependencies resolve deterministically instead of changing with each install.
 
 ## Frontend Security Fixes
 
@@ -43,6 +44,8 @@ The goal of these changes was to make the app start reliably, keep the container
 
 - Synced the client and order forms with backend limits by adding explicit field lengths and matching numeric bounds. That keeps the browser-side validation aligned with the server and reduces avoidable round-trips.
 - Added effect-driven form state resets so the modal forms stay in sync if their source values change while the component is mounted.
+- Normalized submitted form values before sending them to the API, which keeps whitespace-only edits and accidental spacing from slipping into the stored data.
+- Broke the form handling into small, predictable steps for initialization, validation, normalization, and submit. That makes the code easier to reason about and maintain without changing the user flow.
 
 ## Backend API fixes
 

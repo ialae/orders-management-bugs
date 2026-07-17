@@ -14,6 +14,7 @@ The goal of these changes was to make the app start reliably, keep the container
 - The final config cleanup also kept the ignore/template files in sync with the Docker and compose changes, so the repository only tracks the expected example and build inputs.
 - Allowed the backend CORS policy to accept the frontend dev server on either `localhost` or the Docker network IP range used by Vite. That fixes the browser-side `Failed to fetch` issue without loosening the API for unrelated origins.
 - Kept the container setup in dev mode, but tightened the Dockerfiles for cleaner builds. The result is still easy to run locally, but with less noise and a smaller chance of build-time surprises.
+- Fixed missing `AUTO_SEED` environment variable in [docker-compose.yml](docker-compose.yml). The backend reads `AUTO_SEED` to decide whether to seed the database on startup, but it was not set in the compose file. This caused the database to remain empty on first run unless the variable was manually exported. Added `AUTO_SEED: ${AUTO_SEED:-true}` to the backend service environment so seeding happens automatically by default.
 
 ## Backend Dockerfile
 
@@ -47,6 +48,16 @@ The goal of these changes was to make the app start reliably, keep the container
 - Normalized submitted form values before sending them to the API, which keeps whitespace-only edits and accidental spacing from slipping into the stored data.
 - Broke the form handling into small, predictable steps for initialization, validation, normalization, and submit. That makes the code easier to reason about and maintain without changing the user flow.
 
+## Frontend UX Fixes
+
+- Added a confirmation dialog before deleting a client in [ClientsPage.jsx](frontend/src/pages/ClientsPage.jsx). The delete button previously removed the client (and all its orders via cascade) immediately without any warning. The fix uses the existing `ConfirmDialog` component (already used in OrdersPage) to ask "Are you sure you want to delete {name}? This will also delete all their orders." before proceeding. This also required refactoring `handleDelete` to read from `deletingClient` state instead of taking a direct parameter, matching the pattern already established in OrdersPage.
+
+- Fixed the Save button in [ClientForm.jsx](frontend/src/components/ClientForm.jsx) to be disabled while the save operation is in progress. The OrderForm already had `disabled={saving}` on its submit button, but ClientForm was missing this attribute. This prevented potential double-submits that could create duplicate records or cause race conditions.
+
+- Fixed the `clientFilter` type mismatch in [OrdersPage.jsx](frontend/src/pages/OrdersPage.jsx). The filter value was sent to the API as a string (the native type of `<select>` values in React), but the backend expects an integer for the `client_id` query parameter. Added `Number(clientFilter)` conversion when building the API request params so the filter works correctly.
+
+- Fixed the status badge colors in [index.css](frontend/src/index.css) where the `shipped` status was styled with red/danger colors (`#fee2e2` background, `#991b1b` text) and `cancelled` was styled with green/success colors (`#d1fae5` background, `#065f46` text). Swapped them so that "Shipped" (a positive/completed state) uses green and "Cancelled" (a negative/terminal state) uses red, matching user expectations.
+
 ## Backend API fixes
 
 - Fixed client search to use safe SQLAlchemy filters instead of string-built SQL. This prevents injection-prone query building and lets the ORM handle escaping properly.
@@ -65,6 +76,16 @@ The goal of these changes was to make the app start reliably, keep the container
 - Removed the embedded fallback database URL so the backend now requires `DATABASE_URL` from the environment.
 - Added `pool_pre_ping=True` to the SQLAlchemy engine so stale database connections are detected before use.
 - Kept database write handling explicit with `IntegrityError` handling on order writes, so failures return a controlled API response instead of leaking an unhandled exception.
+
+## Backend Logic Fixes
+
+- Fixed `update_client` in [clients.py](backend/app/routers/clients.py) to properly update `phone` and `address` fields. The original code only updated `name` and `email`, silently ignoring the other two fields. When a client was edited through the UI, phone number and address changes would appear to succeed (HTTP 200 returned) but the database was never updated. Added `client.phone = payload.phone` and `client.address = payload.address` to the update logic so all four fields are persisted.
+
+- Fixed `create_order` and `update_order` in [orders.py](backend/app/routers/orders.py) to return orders with a populated `client_name`. After `db.refresh(order)`, SQLAlchemy's `refresh()` only loads the scalar attributes of the model but does not eagerly load relationships. Since `client_name` is a `@property` that accesses `self.client.name`, it returned an empty string when the `client` relationship was not loaded. Added a `joinedload(Order.client)` query after the refresh to ensure the client relationship is available for the response serialization. Without this fix, newly created or updated orders would show an empty client name in the UI until the page was manually refreshed.
+
+## Configuration Fixes
+
+- Fixed the `__pycache__` gitignore pattern in [.gitignore](.gitignore). The original entry was `_pycache__/` (missing one leading underscore), which did not match the actual `__pycache__/` directories that Python creates. This meant compiled bytecode caches were tracked by Git despite being listed in the ignore file. Corrected the pattern to `__pycache__/` so these build artifacts are properly excluded from version control.
 
 ## Validation
 

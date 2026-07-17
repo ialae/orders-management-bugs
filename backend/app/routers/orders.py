@@ -72,6 +72,8 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail="Unable to create order")
     db.refresh(order)
+    # Reload with client relationship to populate client_name
+    order = db.query(Order).options(joinedload(Order.client)).filter(Order.id == order.id).first()
     return order
 
 
@@ -91,6 +93,8 @@ def update_order(order_id: int, payload: OrderUpdate, db: Session = Depends(get_
         db.rollback()
         raise HTTPException(status_code=400, detail="Unable to update order")
     db.refresh(order)
+    # Reload with client relationship to populate client_name
+    order = db.query(Order).options(joinedload(Order.client)).filter(Order.id == order.id).first()
     return order
 
 

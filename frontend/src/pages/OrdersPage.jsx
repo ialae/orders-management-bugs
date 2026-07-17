@@ -34,7 +34,7 @@ export default function OrdersPage() {
     setError('')
     try {
       const data = await ordersApi.list({
-        client_id: clientFilter || undefined,
+        client_id: clientFilter ? Number(clientFilter) : undefined,
         status: statusFilter || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,

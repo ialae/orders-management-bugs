@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { clientsApi } from '../api.js'
 import ClientForm from '../components/ClientForm.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import Pagination from '../components/Pagination.jsx'
 
 const PAGE_SIZE = 10
@@ -16,6 +17,7 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deletingClient, setDeletingClient] = useState(null)
 
   const loadClients = useCallback(async () => {
     setLoading(true)
@@ -60,10 +62,11 @@ export default function ClientsPage() {
     }
   }
 
-  async function handleDelete(client) {
+  async function handleDelete() {
     setError('')
     try {
-      await clientsApi.remove(client.id)
+      await clientsApi.remove(deletingClient.id)
+      setDeletingClient(null)
       await loadClients()
     } catch (err) {
       setError(err.message)
@@ -131,7 +134,7 @@ export default function ClientsPage() {
                     <button
                       type="button"
                       className="btn-link btn-link-danger"
-                      onClick={() => handleDelete(client)}
+                      onClick={() => setDeletingClient(client)}
                     >
                       Delete
                     </button>
@@ -151,6 +154,15 @@ export default function ClientsPage() {
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {deletingClient && (
+        <ConfirmDialog
+          title="Delete Client"
+          message={`Are you sure you want to delete ${deletingClient.name}? This will also delete all their orders.`}
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingClient(null)}
         />
       )}
     </div>

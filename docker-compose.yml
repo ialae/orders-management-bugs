@@ -21,6 +21,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-orders_db}
+      AUTO_SEED: ${AUTO_SEED:-true}
     ports:
       - "8000:8000"
     volumes:

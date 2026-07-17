@@ -9,6 +9,9 @@ The goal of these changes was to make the app start reliably, keep the container
 - Updated [docker-compose.yml](docker-compose.yml) so the backend waits for PostgreSQL health before starting. This avoids startup races where the API tries to connect before the database is ready.
 - Added a backend healthcheck and made the frontend wait for the backend to become healthy. This makes the container chain more reliable because the UI only starts once the API is actually responding.
 - Corrected the frontend Vite env var from `VITE_APP_API_URL` to `VITE_API_URL`. The app only reads the Vite-prefixed variable, so the old name silently left the frontend pointing at the wrong configuration.
+- Externalized the main compose variables with defaults and added [.env.example](.env.example). That keeps the local setup easy to run while making the config easier to override without editing the compose file.
+- Strengthened [/.gitignore](.gitignore) so caches, build artifacts, editor folders, and local env files stay out of the repository while [.env.example](.env.example) remains tracked as the documented template.
+- Allowed the backend CORS policy to accept the frontend dev server on either `localhost` or the Docker network IP range used by Vite. That fixes the browser-side `Failed to fetch` issue without loosening the API for unrelated origins.
 - Kept the container setup in dev mode, but tightened the Dockerfiles for cleaner builds. The result is still easy to run locally, but with less noise and a smaller chance of build-time surprises.
 
 ## Backend Dockerfile

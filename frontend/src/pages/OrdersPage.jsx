@@ -86,11 +86,13 @@ export default function OrdersPage() {
     await loadOrders()
   }
 
-  function resetFilters() {
-    setPage(1)
-    setDateFrom('')
-    setDateTo('')
-  }
+  const resetFilters = () => {
+    setDateFrom('');
+    setDateTo('');
+    setClientFilter('');
+    setStatusFilter('');
+    setPage(1);
+  };
 
   return (
     <div>

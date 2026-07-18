@@ -72,6 +72,8 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
 
     client.name = payload.name
     client.email = payload.email
+    client.phone = payload.phone
+    client.address = payload.address
 
     try:
         db.commit()

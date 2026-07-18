@@ -28,8 +28,8 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
-      phone: form.phone.trim(),
-      address: form.address.trim(),
+      phone: form.phone.trim() || null,
+      address: form.address.trim() || null,
     }
 
     try {

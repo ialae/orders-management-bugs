@@ -12,6 +12,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/clients" replace />} />
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="*" element={<Navigate to="/clients" replace />} />
         </Routes>
       </main>
     </div>

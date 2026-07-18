@@ -127,6 +127,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
               type="number"
               name="quantity"
               min="1"
+              step="1"
               value={form.quantity}
               onChange={handleChange}
               required

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
 
 function toFormValues(order) {
@@ -25,10 +25,32 @@ function toFormValues(order) {
 export default function OrderForm({ order, clientOptions, onSave, onCancel, saving, optionsLoading, optionsError }) {
   const [form, setForm] = useState(toFormValues(order))
   const [error, setError] = useState('')
+  const firstInput = useRef(null)
+  const title = order ? 'Edit Order' : 'Add Order'
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    firstInput.current?.focus()
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Escape' && !saving) {
+      onCancel()
+    }
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === e.currentTarget && !saving) {
+      onCancel()
+    }
   }
 
   async function handleSubmit(e) {
@@ -65,9 +87,13 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h3>{order ? 'Edit Order' : 'Add Order'}</h3>
+    <div
+      className="modal-overlay"
+      onKeyDown={handleKeyDown}
+      onClick={handleOverlayClick}
+    >
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+        <h3>{title}</h3>
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <label>
@@ -76,7 +102,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
             {optionsLoading ? (
               <div className="form-help">Loading clients...</div>
             ) : (
-              <select name="client_id" value={form.client_id} onChange={handleChange} required>
+              <select name="client_id" value={form.client_id} onChange={handleChange} required ref={firstInput}>
                 <option value="">Select a client...</option>
                 {clientOptions.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -139,7 +165,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
             />
           </label>
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onCancel}>
+            <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>

@@ -1,14 +1,36 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const EMPTY_FORM = { name: '', email: '', phone: '', address: '' }
 
 export default function ClientForm({ initialValues, onSave, onCancel, saving }) {
   const [form, setForm] = useState(initialValues || EMPTY_FORM)
   const [error, setError] = useState('')
+  const firstInput = useRef(null)
+  const title = initialValues ? 'Edit Client' : 'Add Client'
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    firstInput.current?.focus()
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Escape' && !saving) {
+      onCancel()
+    }
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === e.currentTarget && !saving) {
+      onCancel()
+    }
   }
 
   async function handleSubmit(e) {
@@ -28,23 +50,29 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h3>{initialValues ? 'Edit Client' : 'Add Client'}</h3>
+    <div
+      className="modal-overlay"
+      onKeyDown={handleKeyDown}
+      onClick={handleOverlayClick}
+    >
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+        <h3>{title}</h3>
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <label>
             Name
-            <input name="name" value={form.name} onChange={handleChange} required />
+            <input ref={firstInput} name="name" value={form.name} onChange={handleChange} required />
           </label>
-          <span className="field-label">Email</span>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+          <label>
+            Email
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </label>
           <label>
             Phone
             <input name="phone" value={form.phone || ''} onChange={handleChange} />
@@ -54,7 +82,7 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
             <input name="address" value={form.address || ''} onChange={handleChange} />
           </label>
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onCancel}>
+            <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>

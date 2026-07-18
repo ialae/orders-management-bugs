@@ -36,6 +36,14 @@ body {
   border-bottom: 1px solid var(--color-border);
 }
 
+@media (max-width: 600px) {
+  .navbar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+}
+
 .navbar-brand {
   font-weight: 700;
   font-size: 1.2rem;
@@ -66,15 +74,28 @@ body {
   width: 100%;
 }
 
+@media (max-width: 600px) {
+  .container {
+    padding: 20px 12px;
+  }
+}
+
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  gap: 12px;
 }
 
 .page-header h2 {
   margin: 0;
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    flex-wrap: wrap;
+  }
 }
 
 .filter-bar {
@@ -94,6 +115,20 @@ body {
   font-size: 0.9rem;
 }
 
+@media (max-width: 600px) {
+  .filter-bar {
+    flex-direction: column;
+  }
+  .filter-bar input[type='text'],
+  .filter-bar select,
+  .filter-bar input[type='date'] {
+    width: 100%;
+  }
+  .filter-bar .btn {
+    width: 100%;
+  }
+}
+
 .inline-label {
   display: flex;
   flex-direction: column;
@@ -102,10 +137,28 @@ body {
   gap: 4px;
 }
 
+.filter-dates {
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .filter-dates {
+    width: 100%;
+  }
+  .filter-dates .inline-label {
+    flex: 1;
+  }
+  .filter-dates .inline-label input {
+    width: 100%;
+  }
+}
+
 .table-wrapper {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
+  overflow-x: auto;
 }
 
 table {
@@ -120,6 +173,12 @@ td {
   border-bottom: 1px solid var(--color-border);
   font-size: 0.9rem;
   white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  td {
+    white-space: normal;
+  }
 }
 
 th {
@@ -148,6 +207,13 @@ tbody tr:hover {
 .actions-cell {
   display: flex;
   gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .actions-cell {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 
 .btn-link {
@@ -200,11 +266,12 @@ tbody tr:hover {
 .pagination {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   justify-content: center;
   margin-top: 20px;
   color: var(--color-muted);
   font-size: 0.85rem;
+  flex-wrap: wrap;
 }
 
 .pagination button {
@@ -269,6 +336,12 @@ tbody tr:hover {
   overflow-y: auto;
 }
 
+@media (max-width: 600px) {
+  .modal {
+    padding: 16px;
+  }
+}
+
 .modal h3 {
   margin-top: 0;
 }
@@ -301,6 +374,15 @@ tbody tr:hover {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 8px;
+}
+
+@media (max-width: 400px) {
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  .modal-actions .btn {
+    width: 100%;
+  }
 }
 
 .form-error {

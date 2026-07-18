@@ -161,31 +161,33 @@ export default function OrdersPage() {
           ))}
         </select>
 
-        <label className="inline-label">
-          From
-          <input
-            type="date"
-            value={dateFrom}
-            max={dateTo || undefined}
-            onChange={(e) => {
-              setPage(1)
-              setDateFrom(e.target.value)
-            }}
-          />
-        </label>
+        <div className="filter-dates">
+          <label className="inline-label">
+            From
+            <input
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => {
+                setPage(1)
+                setDateFrom(e.target.value)
+              }}
+            />
+          </label>
 
-        <label className="inline-label">
-          To
-          <input
-            type="date"
-            value={dateTo}
-            min={dateFrom || undefined}
-            onChange={(e) => {
-              setPage(1)
-              setDateTo(e.target.value)
-            }}
-          />
-        </label>
+          <label className="inline-label">
+            To
+            <input
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => {
+                setPage(1)
+                setDateTo(e.target.value)
+              }}
+            />
+          </label>
+        </div>
 
         <button type="button" className="btn btn-secondary" onClick={resetFilters}>
           Clear filters

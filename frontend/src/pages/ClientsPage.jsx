@@ -29,6 +29,10 @@ export default function ClientsPage() {
     try {
       const data = await clientsApi.list({ search, page, page_size: PAGE_SIZE })
       if (id !== requestId.current) return
+      if (data.items.length === 0 && data.page > 1) {
+        setPage(data.page - 1)
+        return
+      }
       setClients(data.items)
       setTotal(data.total)
     } catch (err) {

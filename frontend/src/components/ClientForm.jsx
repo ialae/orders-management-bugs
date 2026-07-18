@@ -74,11 +74,11 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
             />
           </label>
           <label>
-            Phone
+            Phone (optional)
             <input name="phone" value={form.phone || ''} onChange={handleChange} />
           </label>
           <label>
-            Address
+            Address (optional)
             <input name="address" value={form.address || ''} onChange={handleChange} />
           </label>
           <div className="modal-actions">

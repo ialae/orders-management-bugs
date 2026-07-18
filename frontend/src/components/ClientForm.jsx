@@ -57,7 +57,7 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
             <button type="button" className="btn btn-secondary" onClick={onCancel}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? 'Saving...' : 'Save'}
             </button>
           </div>

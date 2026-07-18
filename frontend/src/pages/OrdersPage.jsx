@@ -24,6 +24,8 @@ export default function OrdersPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deletingOrder, setDeletingOrder] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     clientsApi.options().then(setClientOptions).catch((err) => setError(err.message))
@@ -81,9 +83,17 @@ export default function OrdersPage() {
   }
 
   async function handleDelete() {
-    await ordersApi.remove(deletingOrder.id)
-    setDeletingOrder(null)
-    await loadOrders()
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await ordersApi.remove(deletingOrder.id)
+      setDeletingOrder(null)
+      await loadOrders()
+    } catch (err) {
+      setDeleteError(err.message)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   function resetFilters() {
@@ -244,7 +254,12 @@ export default function OrdersPage() {
           title="Delete Order"
           message={`Are you sure you want to delete this order for ${deletingOrder.client_name}?`}
           onConfirm={handleDelete}
-          onCancel={() => setDeletingOrder(null)}
+          onCancel={() => {
+            setDeletingOrder(null)
+            setDeleteError('')
+          }}
+          loading={deleting}
+          error={deleteError}
         />
       )}
     </div>

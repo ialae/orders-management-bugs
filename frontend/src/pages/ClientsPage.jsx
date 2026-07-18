@@ -96,6 +96,15 @@ export default function ClientsPage() {
         />
       </div>
 
+      {error && (
+        <div className="form-error">
+          {error}
+          <button type="button" className="btn-link" onClick={loadClients} style={{ marginLeft: 8 }}>
+            Retry
+          </button>
+        </div>
+      )}
+
       <div className="table-wrapper">
         <table>
           <thead>
@@ -115,7 +124,7 @@ export default function ClientsPage() {
                   Loading...
                 </td>
               </tr>
-            ) : clients.length === 0 ? (
+            ) : clients.length === 0 && !error ? (
               <tr>
                 <td colSpan={6} className="empty-state">
                   No clients found.

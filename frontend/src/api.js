@@ -1,10 +1,26 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const TIMEOUT_MS = 30000
+
+function signalWithTimeout(externalSignal) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  if (externalSignal) {
+    externalSignal.addEventListener('abort', () => {
+      clearTimeout(timer)
+      controller.abort()
+    }, { once: true })
+  }
+  return { signal: controller.signal, cleanup: () => clearTimeout(timer) }
+}
 
 async function request(path, options = {}) {
+  const { signal: timeoutSignal, cleanup } = signalWithTimeout(options.signal)
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
+    signal: timeoutSignal,
   })
+  cleanup()
 
   if (!res.ok) {
     let detail = `Request failed with status ${res.status}`

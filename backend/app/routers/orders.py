@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -13,11 +13,11 @@ router = APIRouter(prefix="/api/orders", tags=["orders"])
 @router.get("", response_model=OrderListOut)
 def list_orders(
     client_id: int | None = None,
-    status: OrderStatus | None = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     date_from: date | None = None,
     date_to: date | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    status: OrderStatus | None = Query(None),
     db: Session = Depends(get_db),
 ):
     query = db.query(Order).options(joinedload(Order.client))

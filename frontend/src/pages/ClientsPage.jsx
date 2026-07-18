@@ -68,8 +68,8 @@ export default function ClientsPage() {
       } else {
         await clientsApi.create(form)
       }
-      setShowForm(false)
       await loadClients()
+      setShowForm(false)
     } finally {
       setSaving(false)
     }

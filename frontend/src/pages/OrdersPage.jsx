@@ -81,8 +81,8 @@ export default function OrdersPage() {
       } else {
         await ordersApi.create(payload)
       }
-      setShowForm(false)
       await loadOrders()
+      setShowForm(false)
     } finally {
       setSaving(false)
     }

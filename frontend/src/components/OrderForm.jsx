@@ -22,7 +22,7 @@ function toFormValues(order) {
   }
 }
 
-export default function OrderForm({ order, clientOptions, onSave, onCancel, saving }) {
+export default function OrderForm({ order, clientOptions, onSave, onCancel, saving, optionsLoading, optionsError }) {
   const [form, setForm] = useState(toFormValues(order))
   const [error, setError] = useState('')
 
@@ -72,14 +72,19 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
         <form onSubmit={handleSubmit}>
           <label>
             Client
-            <select name="client_id" value={form.client_id} onChange={handleChange} required>
-              <option value="">Select a client...</option>
-              {clientOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            {optionsError && <div className="form-error">{optionsError}</div>}
+            {optionsLoading ? (
+              <div className="form-help">Loading clients...</div>
+            ) : (
+              <select name="client_id" value={form.client_id} onChange={handleChange} required>
+                <option value="">Select a client...</option>
+                {clientOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
           <label>
             Product

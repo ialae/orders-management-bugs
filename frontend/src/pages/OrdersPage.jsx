@@ -15,6 +15,8 @@ export default function OrdersPage() {
   const [error, setError] = useState('')
 
   const [clientOptions, setClientOptions] = useState([])
+  const [optionsLoading, setOptionsLoading] = useState(true)
+  const [optionsError, setOptionsError] = useState('')
   const [clientFilter, setClientFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -28,7 +30,12 @@ export default function OrdersPage() {
   const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
-    clientsApi.options().then(setClientOptions).catch((err) => setError(err.message))
+    setOptionsLoading(true)
+    setOptionsError('')
+    clientsApi.options()
+      .then(setClientOptions)
+      .catch((err) => setOptionsError(err.message))
+      .finally(() => setOptionsLoading(false))
   }, [])
 
   async function loadOrders() {
@@ -243,6 +250,8 @@ export default function OrdersPage() {
         <OrderForm
           order={editingOrder}
           clientOptions={clientOptions}
+          optionsLoading={optionsLoading}
+          optionsError={optionsError}
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}

@@ -49,6 +49,7 @@ export default function ClientsPage() {
 
   async function handleSave(form) {
     setSaving(true)
+    setError('')
     try {
       if (editingClient) {
         await clientsApi.update(editingClient.id, form)
@@ -57,6 +58,8 @@ export default function ClientsPage() {
       }
       setShowForm(false)
       await loadClients()
+    } catch (err) {
+      setError(err.message)
     } finally {
       setSaving(false)
     }
@@ -93,6 +96,8 @@ export default function ClientsPage() {
           }}
         />
       </div>
+
+      {error && <div className="form-error">{error}</div>}
 
       <div className="table-wrapper">
         <table>

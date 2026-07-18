@@ -80,8 +80,20 @@ class OrderCreate(OrderBase):
     pass
 
 
-class OrderUpdate(OrderBase):
-    pass
+class OrderUpdate(BaseModel):
+    client_id: int | None = None
+    product_name: str | None = Field(default=None, max_length=255)
+    quantity: int | None = Field(default=None, gt=0)
+    unit_price: PydanticDecimal | None = Field(default=None, gt=Decimal("0"), max_digits=12, decimal_places=2)
+    status: OrderStatus | None = None
+    order_date: date | None = None
+
+    @field_validator("product_name", mode="before")
+    @classmethod
+    def strip_product_name(cls, value: str) -> str:
+        if not isinstance(value, str):
+            return value
+        return _strip_and_reject_blank(value, "Product name")
 
 
 class OrderOut(OrderBase):

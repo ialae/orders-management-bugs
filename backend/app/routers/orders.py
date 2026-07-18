@@ -83,9 +83,11 @@ def update_order(order_id: int, payload: OrderUpdate, db: Session = Depends(get_
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    _ensure_client_exists(db, payload.client_id)
+    updates = payload.model_dump(exclude_unset=True)
+    if "client_id" in updates:
+        _ensure_client_exists(db, updates["client_id"])
 
-    for key, value in payload.model_dump().items():
+    for key, value in updates.items():
         setattr(order, key, value)
 
     try:

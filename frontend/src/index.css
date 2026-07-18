@@ -195,7 +195,17 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #eef2ff;
+}
+
+/* focus-visible for keyboard accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .empty-state {
@@ -226,6 +236,10 @@ tbody tr:hover {
   font-weight: 500;
 }
 
+.btn-link:hover {
+  text-decoration: underline;
+}
+
 .btn-link-danger {
   color: var(--color-danger);
 }
@@ -253,9 +267,17 @@ tbody tr:hover {
   color: var(--color-text);
 }
 
+.btn-secondary:hover {
+  background-color: #d1d5db;
+}
+
 .btn-danger {
   background-color: var(--color-danger);
   color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
 }
 
 .btn:disabled {
@@ -452,4 +474,22 @@ tbody tr:hover {
   padding: 10px 14px;
   margin-bottom: 16px;
   font-size: 0.85rem;
+}
+
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.not-found h1 {
+  font-size: 4rem;
+  margin: 0;
+}
+
+.not-found a {
+  margin-top: 16px;
 }

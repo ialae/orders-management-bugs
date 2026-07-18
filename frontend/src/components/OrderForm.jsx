@@ -73,7 +73,7 @@ export default function OrderForm({ order, onSave, onCancel, saving }) {
 
     const payload = {
       client_id: Number(form.client_id),
-      product_name: form.product_name,
+      product_name: form.product_name.trim(),
       quantity: Number(form.quantity),
       unit_price: Number(form.unit_price),
       status: form.status,

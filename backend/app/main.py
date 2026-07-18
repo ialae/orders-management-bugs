@@ -5,7 +5,6 @@ from app.database import Base, SessionLocal, engine
 from app.routers import clients, orders
 from app.seed import seed_if_empty
 
-SECRET_KEY = "dev-secret-please-change-12345"
 
 app = FastAPI(title="Orders Management API", debug=True)
 

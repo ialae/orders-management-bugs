@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,15 +7,16 @@ from app.database import Base, SessionLocal, engine
 from app.routers import clients, orders
 from app.seed import seed_if_empty
 
+origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 
 app = FastAPI(title="Orders Management API", debug=True)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type"],
 )
 
 app.include_router(clients.router)

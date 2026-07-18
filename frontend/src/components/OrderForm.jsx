@@ -3,13 +3,15 @@ import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
 
 function toFormValues(order) {
   if (!order) {
+    const today = new Date()
+    const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
     return {
       client_id: '',
       product_name: '',
       quantity: 1,
       unit_price: '',
       status: 'pending',
-      order_date: new Date().toISOString().slice(0, 10),
+      order_date: localToday,
     }
   }
   return {

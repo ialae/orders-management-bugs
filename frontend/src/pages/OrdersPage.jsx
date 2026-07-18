@@ -227,17 +227,19 @@ export default function OrdersPage() {
                     </span>
                   </td>
                   <td>{formatDate(order.order_date)}</td>
-                  <td className="actions-cell">
-                    <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-link btn-link-danger"
-                      onClick={() => setDeletingOrder(order)}
-                    >
-                      Delete
-                    </button>
+                  <td>
+                    <div className="actions-cell">
+                      <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-link btn-link-danger"
+                        onClick={() => setDeletingOrder(order)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

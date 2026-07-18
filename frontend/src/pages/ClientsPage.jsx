@@ -152,17 +152,19 @@ export default function ClientsPage() {
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>
                   <td>{formatDate(client.created_at)}</td>
-                  <td className="actions-cell">
-                    <button type="button" className="btn-link" onClick={() => openEditForm(client)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-link btn-link-danger"
-                      onClick={() => setDeletingClient(client)}
-                    >
-                      Delete
-                    </button>
+                  <td>
+                    <div className="actions-cell">
+                      <button type="button" className="btn-link" onClick={() => openEditForm(client)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-link btn-link-danger"
+                        onClick={() => setDeletingClient(client)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

@@ -39,7 +39,7 @@ def list_orders(
 
     total = query.count()
     items = (
-        query.order_by(Order.id.asc())
+        query.order_by(Order.order_date.desc(), Order.id.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()

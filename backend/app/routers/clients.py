@@ -69,10 +69,8 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-    client.name = payload.name
-    client.email = payload.email
-    client.phone = payload.phone
-    client.address = payload.address
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(client, key, value)
 
     try:
         db.commit()

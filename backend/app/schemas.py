@@ -37,8 +37,25 @@ class ClientCreate(ClientBase):
     pass
 
 
-class ClientUpdate(ClientBase):
-    pass
+class ClientUpdate(BaseModel):
+    name: str | None = Field(default=None, max_length=255)
+    email: EmailStr | None = Field(default=None, max_length=255)
+    phone: str | None = Field(default=None, max_length=50)
+    address: str | None = Field(default=None, max_length=500)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        if not isinstance(value, str):
+            return value
+        return _strip_and_reject_blank(value, "Name")
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        if not isinstance(value, str):
+            return value
+        return _strip_and_reject_blank(value, "Email").lower()
 
 
 class ClientOut(ClientBase):

@@ -3,6 +3,7 @@ import { clientsApi, ordersApi } from '../api.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import OrderForm from '../components/OrderForm.jsx'
 import Pagination from '../components/Pagination.jsx'
+import { formatCurrency, formatDate } from '../format.js'
 import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
 
 const PAGE_SIZE = 10
@@ -226,14 +227,14 @@ export default function OrdersPage() {
                   <td>{order.client_name}</td>
                   <td>{order.product_name}</td>
                   <td>{order.quantity}</td>
-                  <td>${Number(order.unit_price).toFixed(2)}</td>
-                  <td>${Number(order.total).toFixed(2)}</td>
+                  <td>{formatCurrency(order.unit_price)}</td>
+                  <td>{formatCurrency(order.total)}</td>
                   <td>
                     <span className={`status-badge status-${order.status}`}>
                       {STATUS_LABELS[order.status]}
                     </span>
                   </td>
-                  <td>{new Date(order.order_date).toLocaleDateString()}</td>
+                  <td>{formatDate(order.order_date)}</td>
                   <td className="actions-cell">
                     <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
                       Edit

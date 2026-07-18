@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { clientsApi } from '../api.js'
+import { formatDate } from '../format.js'
 import ClientForm from '../components/ClientForm.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import Pagination from '../components/Pagination.jsx'
@@ -150,7 +151,7 @@ export default function ClientsPage() {
                   <td>{client.email}</td>
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>
-                  <td>{new Date(client.created_at).toLocaleDateString()}</td>
+                  <td>{formatDate(client.created_at)}</td>
                   <td className="actions-cell">
                     <button type="button" className="btn-link" onClick={() => openEditForm(client)}>
                       Edit

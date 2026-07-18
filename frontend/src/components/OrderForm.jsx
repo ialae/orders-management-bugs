@@ -132,7 +132,7 @@ export default function OrderForm({ order, onSave, onCancel, saving }) {
             <input
               type="number"
               name="unit_price"
-              min="0"
+              min="0.01"
               step="0.01"
               value={form.unit_price}
               onChange={handleChange}

@@ -1,6 +1,8 @@
 from datetime import date, datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic.types import Decimal as PydanticDecimal
 
 from app.models import OrderStatus
 
@@ -44,8 +46,8 @@ class ClientListOut(BaseModel):
 class OrderBase(BaseModel):
     client_id: int
     product_name: str
-    quantity: int
-    unit_price: float
+    quantity: int = Field(gt=0)
+    unit_price: PydanticDecimal = Field(gt=Decimal("0"), max_digits=12, decimal_places=2)
     status: OrderStatus = OrderStatus.pending
     order_date: date
 
@@ -64,7 +66,7 @@ class OrderOut(OrderBase):
     id: int
     created_at: datetime
     client_name: str
-    total: float
+    total: PydanticDecimal = Field(max_digits=14, decimal_places=2)
 
 
 class OrderListOut(BaseModel):

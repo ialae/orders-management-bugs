@@ -1,7 +1,7 @@
 import enum
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Enum, Float, ForeignKey, Integer, String, func
+from sqlalchemy import CheckConstraint, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -31,12 +31,16 @@ class Client(Base):
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        CheckConstraint("quantity > 0", name="ck_order_quantity_positive"),
+        CheckConstraint("unit_price > 0", name="ck_order_unit_price_positive"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), nullable=False, index=True)
     product_name: Mapped[str] = mapped_column(String(255), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
-    unit_price: Mapped[float] = mapped_column(Float, nullable=False)
+    unit_price = mapped_column(Numeric(12, 2), nullable=False)
     status: Mapped[OrderStatus] = mapped_column(
         Enum(OrderStatus, name="order_status"), nullable=False, default=OrderStatus.pending
     )
@@ -50,5 +54,5 @@ class Order(Base):
         return self.client.name if self.client else ""
 
     @property
-    def total(self) -> float:
-        return float(self.unit_price) * self.quantity
+    def total(self):
+        return self.unit_price * self.quantity

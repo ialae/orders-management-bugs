@@ -7,18 +7,22 @@ export default function ClientSearch({ value, onChange, placeholder, initialQuer
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const timer = useRef(null)
+  const abortRef = useRef(null)
   const wrapperRef = useRef(null)
   const selectedName = useRef('')
 
   const search = useCallback(async (q) => {
+    if (abortRef.current) abortRef.current.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setLoading(true)
     try {
-      const data = await clientsApi.list({ search: q || undefined, page_size: 20 })
+      const data = await clientsApi.list({ search: q || undefined, page_size: 20 }, { signal: controller.signal })
       setResults(data.items)
-    } catch {
-      setResults([])
+    } catch (err) {
+      if (err.name !== 'AbortError') setResults([])
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) setLoading(false)
     }
   }, [])
 

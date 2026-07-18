@@ -35,7 +35,7 @@ function toQueryString(params) {
 }
 
 export const clientsApi = {
-  list: (params) => request(`/api/clients${toQueryString(params)}`),
+  list: (params, options) => request(`/api/clients${toQueryString(params)}`, options),
   options: () => request('/api/clients/options'),
   get: (id) => request(`/api/clients/${id}`),
   create: (data) => request('/api/clients', { method: 'POST', body: JSON.stringify(data) }),

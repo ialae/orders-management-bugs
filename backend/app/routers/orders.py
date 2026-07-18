@@ -24,20 +24,22 @@ def list_orders(
     if date_from is not None and date_to is not None and date_from > date_to:
         raise HTTPException(status_code=400, detail="date_from cannot be after date_to")
 
-    query = db.query(Order).options(joinedload(Order.client))
+    # Build the base query with filters only (no joinedload) for an accurate count
+    base_query = db.query(Order)
 
     if client_id is not None:
-        query = query.filter(Order.client_id == client_id)
+        base_query = base_query.filter(Order.client_id == client_id)
     if status is not None:
-        query = query.filter(Order.status == status)
+        base_query = base_query.filter(Order.status == status)
     if date_from is not None:
-        query = query.filter(Order.order_date >= date_from)
+        base_query = base_query.filter(Order.order_date >= date_from)
     if date_to is not None:
-        query = query.filter(Order.order_date <= date_to)
+        base_query = base_query.filter(Order.order_date <= date_to)
 
-    total = query.count()
+    total = base_query.count()
     items = (
-        query.order_by(Order.id.asc())
+        base_query.options(joinedload(Order.client))
+        .order_by(Order.id.asc())
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()

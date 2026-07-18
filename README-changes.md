@@ -89,6 +89,42 @@ The goal of these changes was to make the app start reliably, keep the container
 
 - Fixed the `__pycache__` gitignore pattern in [.gitignore](.gitignore). The original entry was `_pycache__/` (missing one leading underscore), which did not match the actual `__pycache__/` directories that Python creates. This meant compiled bytecode caches were tracked by Git despite being listed in the ignore file. Corrected the pattern to `__pycache__/` so these build artifacts are properly excluded from version control.
 
+## Second Pass — Additional Bug Fixes
+
+A second audit of the codebase found eight more bugs that were missed in the first pass. The changes below describe each one, why it was wrong, and how it was fixed.
+
+### Backend Query Fix
+
+- Fixed `list_orders` in [orders.py](backend/app/routers/orders.py) so that `count()` is no longer called on a query that already has `joinedload` applied. When `joinedload` is present, SQLAlchemy wraps the entire query in a subquery to compute the count, which is both inefficient and can produce an inaccurate total in edge cases involving duplicate rows from the join. The fix splits the query into two steps: a base query with only the filter conditions is used for `count()`, then `options(joinedload(Order.client))` is applied to that same base query when fetching the actual page of results.
+
+- Fixed the seed guard in [seed.py](backend/app/seed.py) to check `Client.count()` instead of `Order.count()`. The original guard skipped seeding if any orders existed, but if all orders were deleted while clients remained in the database, the condition would be `False` and the seed would re-run. It would then attempt to insert clients with emails and phone numbers that are already in the database, crashing with an `IntegrityError` on the unique constraints. Checking the client count is the correct sentinel because clients are the root entities the seed creates first — if any exist, the database has already been seeded.
+
+### Frontend Error Handling Fixes
+
+- Fixed `handleSave` in [ClientsPage.jsx](frontend/src/pages/ClientsPage.jsx) to catch and surface API errors instead of silently dropping them. The function had a `try/finally` with no `catch` block. When the API returned an error — for example a 409 Conflict for a duplicate email or phone number — the exception was swallowed, the modal closed, and the user received no feedback. Added a `catch` block that sets the page-level error state, and a `setError('')` call at the start of each save attempt to clear any previous message. The same silent-error pattern was present in `handleSave` in [OrdersPage.jsx](frontend/src/pages/OrdersPage.jsx) and was fixed there too.
+
+- Added the missing error banner to the JSX in [ClientsPage.jsx](frontend/src/pages/ClientsPage.jsx). The component tracked an `error` state and set it in `loadClients()` and `handleDelete()`, but there was no corresponding `{error && <div>...</div>}` render in the template. Every error the component produced — network failures, delete errors, server rejections — was invisible to the user. Added the banner below the filter bar, matching the pattern already in place in `OrdersPage`.
+
+- Fixed a race condition in [OrdersPage.jsx](frontend/src/pages/OrdersPage.jsx) where an error from `clientsApi.options()` was immediately overwritten. When the options fetch failed it called `setError(err.message)`, but `loadOrders()` always runs immediately after and calls `setError('')` at the start of its `try` block. This cleared the error before the user could see it, leaving the client dropdown empty with no indication of why. The fix introduces a dedicated `clientsError` state for the options fetch so the two error sources no longer share the same state variable and cannot overwrite each other.
+
+### Frontend Date Display Fix
+
+- Fixed the `order_date` display in [OrdersPage.jsx](frontend/src/pages/OrdersPage.jsx) to parse date strings as local time instead of UTC. The API returns `order_date` as a date-only string such as `"2024-03-15"`. Passing this string directly to `new Date()` causes the browser to parse it as UTC midnight. In any timezone behind UTC — for example UTC−5 — midnight UTC is the previous evening in local time, so the rendered date appears one day earlier than the actual order date. The fix appends `'T00:00:00'` to the date string before constructing the `Date` object, which forces the browser to interpret it as local midnight and display the correct calendar date regardless of timezone.
+
+### Frontend Form Fixes
+
+- Fixed [ClientForm.jsx](frontend/src/components/ClientForm.jsx) to send `null` instead of an empty string for the `phone` and `address` fields when they are left blank. The schema on both the backend model and the Pydantic schema declares these fields as nullable — `str | None` in Python, `unique=True, nullable=True` in the database. Sending an empty string `""` passes Pydantic validation because there is no `min_length` constraint on these optional fields, and it gets stored in the database as a real non-null value. This directly breaks the `unique` constraint on `Client.phone`: PostgreSQL does not allow two rows with the same non-null value, so the second client created without a phone number would receive a 409 Conflict response. Converting empty input to `null` matches the column semantics and allows any number of clients to omit their phone number.
+
+- Fixed the default `order_date` in [OrderForm.jsx](frontend/src/components/OrderForm.jsx) to use the user's local date instead of the UTC date. The original code used `new Date().toISOString().slice(0, 10)`, which returns the current date in UTC. For users in UTC+1 or later, after midnight UTC but before their local midnight, this produces tomorrow's date as the default. For users west of UTC, a similar edge case can produce yesterday's date. Replaced with an explicit construction using `getFullYear()`, `getMonth()`, and `getDate()`, which read from the local timezone and always reflect the correct calendar date for the user.
+
+### Routing Fix
+
+- Added a wildcard catch-all route to [App.jsx](frontend/src/App.jsx). Without it, navigating to any path that the router did not recognise — such as `/settings` or a mistyped URL — rendered an empty `<main>` element with no message, redirect, or user feedback. Added `<Route path="*">` that redirects to `/clients`, matching the same behaviour as the root `"/"` redirect and ensuring the application always lands in a valid state.
+
+### Configuration Documentation Fix
+
+- Added `AUTO_SEED` to [.env.example](.env.example) and added explanatory comments to all variable groups. `AUTO_SEED` was read by [main.py](backend/app/main.py) and declared in [docker-compose.yml](docker-compose.yml) but was absent from `.env.example`, making it invisible to anyone setting up the project from the template. The fix adds the variable with a comment explaining its purpose. The other variables in the file — including `FRONTEND_ORIGIN` and `FRONTEND_ORIGIN_REGEX` — were also given inline comments so their role and when to override them is clear without having to trace through the source code.
+
 ## Validation
 
 - `docker-compose config`

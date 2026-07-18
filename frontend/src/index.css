@@ -369,6 +369,66 @@ tbody tr:hover {
   color: var(--color-text);
 }
 
+.client-search {
+  position: relative;
+}
+
+.client-search > input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.client-search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.client-search-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.client-search-option:hover,
+.client-search-option.active {
+  background-color: #f3f4f6;
+}
+
+.client-search-option.disabled {
+  color: var(--color-muted);
+  cursor: default;
+}
+
+.filter-search-wrapper {
+  min-width: 200px;
+}
+
+@media (max-width: 600px) {
+  .filter-search-wrapper {
+    width: 100%;
+  }
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;

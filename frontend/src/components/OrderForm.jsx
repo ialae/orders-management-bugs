@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ClientSearch from './ClientSearch.jsx'
 import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
 
 function toFormValues(order) {
@@ -22,7 +23,7 @@ function toFormValues(order) {
   }
 }
 
-export default function OrderForm({ order, clientOptions, onSave, onCancel, saving, optionsLoading, optionsError }) {
+export default function OrderForm({ order, onSave, onCancel, saving }) {
   const [form, setForm] = useState(toFormValues(order))
   const [error, setError] = useState('')
   const firstInput = useRef(null)
@@ -98,19 +99,12 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
         <form onSubmit={handleSubmit}>
           <label>
             Client
-            {optionsError && <div className="form-error">{optionsError}</div>}
-            {optionsLoading ? (
-              <div className="form-help">Loading clients...</div>
-            ) : (
-              <select name="client_id" value={form.client_id} onChange={handleChange} required ref={firstInput}>
-                <option value="">Select a client...</option>
-                {clientOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            )}
+            <ClientSearch
+              value={form.client_id}
+              onChange={(id) => setForm((prev) => ({ ...prev, client_id: id }))}
+              initialQuery={order?.client_name}
+              inputRef={firstInput}
+            />
           </label>
           <label>
             Product

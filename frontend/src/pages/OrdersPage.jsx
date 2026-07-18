@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { clientsApi, ordersApi } from '../api.js'
+import { ordersApi } from '../api.js'
+import ClientSearch from '../components/ClientSearch.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import OrderForm from '../components/OrderForm.jsx'
 import Pagination from '../components/Pagination.jsx'
@@ -15,9 +16,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const [clientOptions, setClientOptions] = useState([])
-  const [optionsLoading, setOptionsLoading] = useState(true)
-  const [optionsError, setOptionsError] = useState('')
   const [clientFilter, setClientFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -30,15 +28,6 @@ export default function OrdersPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const requestId = useRef(0)
-
-  useEffect(() => {
-    setOptionsLoading(true)
-    setOptionsError('')
-    clientsApi.options()
-      .then(setClientOptions)
-      .catch((err) => setOptionsError(err.message))
-      .finally(() => setOptionsLoading(false))
-  }, [])
 
   async function loadOrders() {
     const id = ++requestId.current
@@ -131,20 +120,19 @@ export default function OrdersPage() {
       </div>
 
       <div className="filter-bar">
-        <select
-          value={clientFilter}
-          onChange={(e) => {
-            setPage(1)
-            setClientFilter(e.target.value)
-          }}
-        >
-          <option value="">All clients</option>
-          {clientOptions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="filter-search-wrapper">
+          <label className="inline-label">
+            Client
+            <ClientSearch
+              value={clientFilter}
+              onChange={(id) => {
+                setPage(1)
+                setClientFilter(id)
+              }}
+              placeholder="All clients..."
+            />
+          </label>
+        </div>
 
         <select
           value={statusFilter}
@@ -263,9 +251,6 @@ export default function OrdersPage() {
       {showForm && (
         <OrderForm
           order={editingOrder}
-          clientOptions={clientOptions}
-          optionsLoading={optionsLoading}
-          optionsError={optionsError}
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}

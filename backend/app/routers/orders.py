@@ -62,7 +62,11 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
     _ensure_client_exists(db, payload.client_id)
     order = Order(**payload.model_dump())
     db.add(order)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(order)
     return order
 
@@ -78,7 +82,11 @@ def update_order(order_id: int, payload: OrderUpdate, db: Session = Depends(get_
     for key, value in payload.model_dump().items():
         setattr(order, key, value)
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(order)
     return order
 
@@ -89,5 +97,9 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     db.delete(order)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return None

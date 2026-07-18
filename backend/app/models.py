@@ -25,7 +25,7 @@ class Client(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     orders: Mapped[list["Order"]] = relationship(
-        "Order", back_populates="client", cascade="all, delete-orphan"
+        "Order", back_populates="client"
     )
 
 

@@ -18,6 +18,7 @@ export default function ClientsPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deletingClient, setDeletingClient] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
 
   async function loadClients() {
     setLoading(true)
@@ -64,9 +65,14 @@ export default function ClientsPage() {
   }
 
   async function confirmDelete() {
-    await clientsApi.remove(deletingClient.id)
-    setDeletingClient(null)
-    await loadClients()
+    setDeleteError('')
+    try {
+      await clientsApi.remove(deletingClient.id)
+      setDeletingClient(null)
+      await loadClients()
+    } catch (err) {
+      setDeleteError(err.message)
+    }
   }
 
   return (
@@ -156,9 +162,16 @@ export default function ClientsPage() {
       {deletingClient && (
         <ConfirmDialog
           title="Delete Client"
-          message={`Are you sure you want to delete ${deletingClient.name}?`}
+          message={
+            deleteError
+              ? deleteError
+              : `Are you sure you want to delete ${deletingClient.name}?`
+          }
           onConfirm={confirmDelete}
-          onCancel={() => setDeletingClient(null)}
+          onCancel={() => {
+            setDeletingClient(null)
+            setDeleteError('')
+          }}
         />
       )}
     </div>

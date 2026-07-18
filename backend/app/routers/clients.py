@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Client
+from app.models import Client, Order
 from app.schemas import ClientCreate, ClientListOut, ClientOption, ClientOut, ClientUpdate
 
 router = APIRouter(prefix="/api/clients", tags=["clients"])
@@ -91,6 +91,14 @@ def delete_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+
+    order_count = db.query(Order).filter(Order.client_id == client_id).count()
+    if order_count > 0:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Client has {order_count} order(s). Remove them before deleting the client.",
+        )
+
     db.delete(client)
     try:
         db.commit()

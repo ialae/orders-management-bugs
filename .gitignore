@@ -9,6 +9,11 @@ dist/
 .env
 .DS_Store
 
+# personal notes
 BUGS.md
 BUGS_DOCS.md
 ROADMAP.md
+
+# for testing
+.postman
+postman

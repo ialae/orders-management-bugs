@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { clientsApi } from '../api.js'
 import ClientForm from '../components/ClientForm.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -20,17 +20,22 @@ export default function ClientsPage() {
   const [deletingClient, setDeletingClient] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const requestId = useRef(0)
 
   async function loadClients() {
+    const id = ++requestId.current
     setLoading(true)
     setError('')
     try {
       const data = await clientsApi.list({ search, page, page_size: PAGE_SIZE })
+      if (id !== requestId.current) return
       setClients(data.items)
       setTotal(data.total)
     } catch (err) {
+      if (id !== requestId.current) return
       setError(err.message)
     } finally {
+      if (id !== requestId.current) return
       setLoading(false)
     }
   }

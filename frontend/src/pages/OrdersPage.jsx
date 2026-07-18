@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { clientsApi, ordersApi } from '../api.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import OrderForm from '../components/OrderForm.jsx'
@@ -28,6 +28,7 @@ export default function OrdersPage() {
   const [deletingOrder, setDeletingOrder] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const requestId = useRef(0)
 
   useEffect(() => {
     setOptionsLoading(true)
@@ -39,6 +40,7 @@ export default function OrdersPage() {
   }, [])
 
   async function loadOrders() {
+    const id = ++requestId.current
     setLoading(true)
     setError('')
     try {
@@ -50,11 +52,14 @@ export default function OrdersPage() {
         page,
         page_size: PAGE_SIZE,
       })
+      if (id !== requestId.current) return
       setOrders(data.items)
       setTotal(data.total)
     } catch (err) {
+      if (id !== requestId.current) return
       setError(err.message)
     } finally {
+      if (id !== requestId.current) return
       setLoading(false)
     }
   }

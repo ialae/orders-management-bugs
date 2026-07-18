@@ -22,6 +22,12 @@ def list_orders(
 ):
     query = db.query(Order).options(joinedload(Order.client))
 
+    if date_from is not None and date_to is not None and date_from > date_to:
+        raise HTTPException(
+            status_code=422,
+            detail="date_from must not be later than date_to",
+        )
+
     if client_id is not None:
         query = query.filter(Order.client_id == client_id)
     if status is not None:

@@ -139,6 +139,7 @@ export default function OrdersPage() {
           <input
             type="date"
             value={dateFrom}
+            max={dateTo || undefined}
             onChange={(e) => {
               setPage(1)
               setDateFrom(e.target.value)
@@ -151,6 +152,7 @@ export default function OrdersPage() {
           <input
             type="date"
             value={dateTo}
+            min={dateFrom || undefined}
             onChange={(e) => {
               setPage(1)
               setDateTo(e.target.value)

@@ -141,7 +141,7 @@ export default function ClientsPage() {
             ) : clients.length === 0 && !error ? (
               <tr>
                 <td colSpan={6} className="empty-state">
-                  No clients found.
+                  {search ? 'No clients match your search.' : 'No clients yet.'}
                 </td>
               </tr>
             ) : (

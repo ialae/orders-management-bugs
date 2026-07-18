@@ -220,7 +220,9 @@ export default function OrdersPage() {
             ) : orders.length === 0 ? (
               <tr>
                 <td colSpan={8} className="empty-state">
-                  No orders found.
+                  {clientFilter || statusFilter || dateFrom || dateTo
+                    ? 'No orders match your filters.'
+                    : 'No orders yet.'}
                 </td>
               </tr>
             ) : (

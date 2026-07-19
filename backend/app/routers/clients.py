@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, text
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Client
+from app.models import Client, Order
 from app.schemas import ClientCreate, ClientListOut, ClientOption, ClientOut, ClientUpdate
 
 router = APIRouter(prefix="/api/clients", tags=["clients"])
@@ -13,22 +13,22 @@ router = APIRouter(prefix="/api/clients", tags=["clients"])
 @router.get("", response_model=ClientListOut)
 def list_clients(
     search: str | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     query = db.query(Client)
 
     if search:
-        query = query.filter(
-            text(f"clients.name ILIKE '%{search}%' AND clients.email ILIKE '%{search}%'")
-        )
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        query = query.filter(or_(Client.name.ilike(pattern, escape="\\"), Client.email.ilike(pattern, escape="\\")))
 
     total = query.count()
     items = (
         query.order_by(Client.created_at.desc())
         .offset((page - 1) * page_size)
-        .limit(10)
+        .limit(page_size)
         .all()
     )
 
@@ -43,6 +43,8 @@ def list_client_options(db: Session = Depends(get_db)):
 @router.get("/{client_id}", response_model=ClientOut)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
     return client
 
 
@@ -55,6 +57,9 @@ def create_client(payload: ClientCreate, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="A client with this email already exists")
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(client)
     return client
 
@@ -65,14 +70,17 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-    client.name = payload.name
-    client.email = payload.email
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(client, key, value)
 
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="A client with this email already exists")
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(client)
     return client
 
@@ -82,6 +90,18 @@ def delete_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+
+    order_count = db.query(Order).filter(Order.client_id == client_id).count()
+    if order_count > 0:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Client has {order_count} order(s). Remove them before deleting the client.",
+        )
+
     db.delete(client)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return None

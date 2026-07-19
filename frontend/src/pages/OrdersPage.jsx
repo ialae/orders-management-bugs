@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
-import { clientsApi, ordersApi } from '../api.js'
+import { useEffect, useRef, useState } from 'react'
+import { ordersApi } from '../api.js'
+import ClientSearch from '../components/ClientSearch.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import OrderForm from '../components/OrderForm.jsx'
 import Pagination from '../components/Pagination.jsx'
+import { formatCurrency, formatDate } from '../format.js'
 import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
 
 const PAGE_SIZE = 10
@@ -14,7 +16,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const [clientOptions, setClientOptions] = useState([])
   const [clientFilter, setClientFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -24,12 +25,12 @@ export default function OrdersPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deletingOrder, setDeletingOrder] = useState(null)
-
-  useEffect(() => {
-    clientsApi.options().then(setClientOptions).catch((err) => setError(err.message))
-  }, [])
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const requestId = useRef(0)
 
   async function loadOrders() {
+    const id = ++requestId.current
     setLoading(true)
     setError('')
     try {
@@ -41,11 +42,18 @@ export default function OrdersPage() {
         page,
         page_size: PAGE_SIZE,
       })
+      if (id !== requestId.current) return
+      if (data.items.length === 0 && data.page > 1) {
+        setPage(data.page - 1)
+        return
+      }
       setOrders(data.items)
       setTotal(data.total)
     } catch (err) {
+      if (id !== requestId.current) return
       setError(err.message)
     } finally {
+      if (id !== requestId.current) return
       setLoading(false)
     }
   }
@@ -73,21 +81,31 @@ export default function OrdersPage() {
       } else {
         await ordersApi.create(payload)
       }
-      setShowForm(false)
       await loadOrders()
+      setShowForm(false)
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete() {
-    await ordersApi.remove(deletingOrder.id)
-    setDeletingOrder(null)
-    await loadOrders()
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await ordersApi.remove(deletingOrder.id)
+      setDeletingOrder(null)
+      await loadOrders()
+    } catch (err) {
+      setDeleteError(err.message)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   function resetFilters() {
     setPage(1)
+    setClientFilter('')
+    setStatusFilter('')
     setDateFrom('')
     setDateTo('')
   }
@@ -102,20 +120,19 @@ export default function OrdersPage() {
       </div>
 
       <div className="filter-bar">
-        <select
-          value={clientFilter}
-          onChange={(e) => {
-            setPage(1)
-            setClientFilter(e.target.value)
-          }}
-        >
-          <option value="">All clients</option>
-          {clientOptions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="filter-search-wrapper">
+          <label className="inline-label">
+            Client
+            <ClientSearch
+              value={clientFilter}
+              onChange={(id) => {
+                setPage(1)
+                setClientFilter(id)
+              }}
+              placeholder="All clients..."
+            />
+          </label>
+        </div>
 
         <select
           value={statusFilter}
@@ -132,29 +149,33 @@ export default function OrdersPage() {
           ))}
         </select>
 
-        <label className="inline-label">
-          From
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => {
-              setPage(1)
-              setDateFrom(e.target.value)
-            }}
-          />
-        </label>
+        <div className="filter-dates">
+          <label className="inline-label">
+            From
+            <input
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => {
+                setPage(1)
+                setDateFrom(e.target.value)
+              }}
+            />
+          </label>
 
-        <label className="inline-label">
-          To
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => {
-              setPage(1)
-              setDateTo(e.target.value)
-            }}
-          />
-        </label>
+          <label className="inline-label">
+            To
+            <input
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => {
+                setPage(1)
+                setDateTo(e.target.value)
+              }}
+            />
+          </label>
+        </div>
 
         <button type="button" className="btn btn-secondary" onClick={resetFilters}>
           Clear filters
@@ -187,7 +208,9 @@ export default function OrdersPage() {
             ) : orders.length === 0 ? (
               <tr>
                 <td colSpan={8} className="empty-state">
-                  No orders found.
+                  {clientFilter || statusFilter || dateFrom || dateTo
+                    ? 'No orders match your filters.'
+                    : 'No orders yet.'}
                 </td>
               </tr>
             ) : (
@@ -196,25 +219,27 @@ export default function OrdersPage() {
                   <td>{order.client_name}</td>
                   <td>{order.product_name}</td>
                   <td>{order.quantity}</td>
-                  <td>${Number(order.unit_price).toFixed(2)}</td>
-                  <td>${Number(order.total).toFixed(2)}</td>
+                  <td>{formatCurrency(order.unit_price)}</td>
+                  <td>{formatCurrency(order.total)}</td>
                   <td>
                     <span className={`status-badge status-${order.status}`}>
                       {STATUS_LABELS[order.status]}
                     </span>
                   </td>
-                  <td>{new Date(order.order_date).toLocaleDateString()}</td>
-                  <td className="actions-cell">
-                    <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-link btn-link-danger"
-                      onClick={() => setDeletingOrder(order)}
-                    >
-                      Delete
-                    </button>
+                  <td>{formatDate(order.order_date)}</td>
+                  <td>
+                    <div className="actions-cell">
+                      <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-link btn-link-danger"
+                        onClick={() => setDeletingOrder(order)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -228,7 +253,6 @@ export default function OrdersPage() {
       {showForm && (
         <OrderForm
           order={editingOrder}
-          clientOptions={clientOptions}
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}
@@ -240,7 +264,12 @@ export default function OrdersPage() {
           title="Delete Order"
           message={`Are you sure you want to delete this order for ${deletingOrder.client_name}?`}
           onConfirm={handleDelete}
-          onCancel={() => setDeletingOrder(null)}
+          onCancel={() => {
+            setDeletingOrder(null)
+            setDeleteError('')
+          }}
+          loading={deleting}
+          error={deleteError}
         />
       )}
     </div>

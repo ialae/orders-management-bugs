@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import ClientSearch from './ClientSearch.jsx'
 import { ORDER_STATUSES, STATUS_LABELS } from '../constants.js'
 
 function toFormValues(order) {
@@ -22,13 +23,35 @@ function toFormValues(order) {
   }
 }
 
-export default function OrderForm({ order, clientOptions, onSave, onCancel, saving }) {
+export default function OrderForm({ order, onSave, onCancel, saving }) {
   const [form, setForm] = useState(toFormValues(order))
   const [error, setError] = useState('')
+  const firstInput = useRef(null)
+  const title = order ? 'Edit Order' : 'Add Order'
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    firstInput.current?.focus()
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Escape' && !saving) {
+      onCancel()
+    }
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === e.currentTarget && !saving) {
+      onCancel()
+    }
   }
 
   async function handleSubmit(e) {
@@ -50,7 +73,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
 
     const payload = {
       client_id: Number(form.client_id),
-      product_name: form.product_name,
+      product_name: form.product_name.trim(),
       quantity: Number(form.quantity),
       unit_price: Number(form.unit_price),
       status: form.status,
@@ -65,21 +88,23 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h3>{order ? 'Edit Order' : 'Add Order'}</h3>
+    <div
+      className="modal-overlay"
+      onKeyDown={handleKeyDown}
+      onClick={handleOverlayClick}
+    >
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+        <h3>{title}</h3>
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <label>
             Client
-            <select name="client_id" value={form.client_id} onChange={handleChange} required>
-              <option value="">Select a client...</option>
-              {clientOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <ClientSearch
+              value={form.client_id}
+              onChange={(id) => setForm((prev) => ({ ...prev, client_id: id }))}
+              initialQuery={order?.client_name}
+              inputRef={firstInput}
+            />
           </label>
           <label>
             Product
@@ -96,6 +121,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
               type="number"
               name="quantity"
               min="1"
+              step="1"
               value={form.quantity}
               onChange={handleChange}
               required
@@ -106,7 +132,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
             <input
               type="number"
               name="unit_price"
-              min="0"
+              min="0.01"
               step="0.01"
               value={form.unit_price}
               onChange={handleChange}
@@ -134,7 +160,7 @@ export default function OrderForm({ order, clientOptions, onSave, onCancel, savi
             />
           </label>
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onCancel}>
+            <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>

@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -13,26 +13,34 @@ router = APIRouter(prefix="/api/orders", tags=["orders"])
 @router.get("", response_model=OrderListOut)
 def list_orders(
     client_id: int | None = None,
-    status: OrderStatus | None = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     date_from: date | None = None,
     date_to: date | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    status: OrderStatus | None = Query(None),
     db: Session = Depends(get_db),
 ):
     query = db.query(Order).options(joinedload(Order.client))
 
+    if date_from is not None and date_to is not None and date_from > date_to:
+        raise HTTPException(
+            status_code=422,
+            detail="date_from must not be later than date_to",
+        )
+
     if client_id is not None:
         query = query.filter(Order.client_id == client_id)
+    if status is not None:
+        query = query.filter(Order.status == status)
     if date_from is not None:
-        query = query.filter(Order.order_date <= date_from)
+        query = query.filter(Order.order_date >= date_from)
     if date_to is not None:
-        query = query.filter(Order.order_date >= date_to)
+        query = query.filter(Order.order_date <= date_to)
 
     total = query.count()
     items = (
-        query.order_by(Order.id.asc())
-        .offset(page * page_size)
+        query.order_by(Order.order_date.desc(), Order.id.desc())
+        .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
     )
@@ -57,9 +65,14 @@ def _ensure_client_exists(db: Session, client_id: int) -> None:
 
 @router.post("", response_model=OrderOut, status_code=201)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
+    _ensure_client_exists(db, payload.client_id)
     order = Order(**payload.model_dump())
     db.add(order)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(order)
     return order
 
@@ -70,10 +83,18 @@ def update_order(order_id: int, payload: OrderUpdate, db: Session = Depends(get_
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    for key, value in payload.model_dump().items():
+    updates = payload.model_dump(exclude_unset=True)
+    if "client_id" in updates:
+        _ensure_client_exists(db, updates["client_id"])
+
+    for key, value in updates.items():
         setattr(order, key, value)
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(order)
     return order
 
@@ -84,5 +105,9 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     db.delete(order)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return None

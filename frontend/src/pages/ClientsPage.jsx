@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { clientsApi } from '../api.js'
+import { formatDate } from '../format.js'
 import ClientForm from '../components/ClientForm.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import Pagination from '../components/Pagination.jsx'
 
 const PAGE_SIZE = 10
@@ -16,17 +18,29 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deletingClient, setDeletingClient] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const requestId = useRef(0)
 
   async function loadClients() {
+    const id = ++requestId.current
     setLoading(true)
     setError('')
     try {
       const data = await clientsApi.list({ search, page, page_size: PAGE_SIZE })
+      if (id !== requestId.current) return
+      if (data.items.length === 0 && data.page > 1) {
+        setPage(data.page - 1)
+        return
+      }
       setClients(data.items)
       setTotal(data.total)
     } catch (err) {
+      if (id !== requestId.current) return
       setError(err.message)
     } finally {
+      if (id !== requestId.current) return
       setLoading(false)
     }
   }
@@ -54,16 +68,25 @@ export default function ClientsPage() {
       } else {
         await clientsApi.create(form)
       }
-      setShowForm(false)
       await loadClients()
+      setShowForm(false)
     } finally {
       setSaving(false)
     }
   }
 
-  async function handleDelete(client) {
-    await clientsApi.remove(client.id)
-    await loadClients()
+  async function confirmDelete() {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await clientsApi.remove(deletingClient.id)
+      setDeletingClient(null)
+      await loadClients()
+    } catch (err) {
+      setDeleteError(err.message)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -87,6 +110,15 @@ export default function ClientsPage() {
         />
       </div>
 
+      {error && (
+        <div className="form-error">
+          {error}
+          <button type="button" className="btn-link" onClick={loadClients} style={{ marginLeft: 8 }}>
+            Retry
+          </button>
+        </div>
+      )}
+
       <div className="table-wrapper">
         <table>
           <thead>
@@ -106,31 +138,33 @@ export default function ClientsPage() {
                   Loading...
                 </td>
               </tr>
-            ) : clients.length === 0 ? (
+            ) : clients.length === 0 && !error ? (
               <tr>
                 <td colSpan={6} className="empty-state">
-                  No clients found.
+                  {search ? 'No clients match your search.' : 'No clients yet.'}
                 </td>
               </tr>
             ) : (
               clients.map((client) => (
                 <tr key={client.id}>
-                  <td dangerouslySetInnerHTML={{ __html: client.name }} />
+                  <td>{client.name}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>
-                  <td>{new Date(client.created_at).toLocaleDateString()}</td>
-                  <td className="actions-cell">
-                    <button type="button" className="btn-link" onClick={() => openEditForm(client)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-link btn-link-danger"
-                      onClick={() => handleDelete(client)}
-                    >
-                      Delete
-                    </button>
+                  <td>{formatDate(client.created_at)}</td>
+                  <td>
+                    <div className="actions-cell">
+                      <button type="button" className="btn-link" onClick={() => openEditForm(client)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-link btn-link-danger"
+                        onClick={() => setDeletingClient(client)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -147,6 +181,20 @@ export default function ClientsPage() {
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {deletingClient && (
+        <ConfirmDialog
+          title="Delete Client"
+          message={`Are you sure you want to delete ${deletingClient.name}?`}
+          onConfirm={confirmDelete}
+          onCancel={() => {
+            setDeletingClient(null)
+            setDeleteError('')
+          }}
+          loading={deleting}
+          error={deleteError}
         />
       )}
     </div>

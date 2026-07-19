@@ -81,13 +81,20 @@ export default function OrdersPage() {
   }
 
   async function handleDelete() {
-    await ordersApi.remove(deletingOrder.id)
-    setDeletingOrder(null)
-    await loadOrders()
+    try {
+      await ordersApi.remove(deletingOrder.id)
+      setDeletingOrder(null)
+      await loadOrders()
+    } catch (err) {
+      setDeletingOrder(null)
+      setError(err.message)
+    }
   }
 
   function resetFilters() {
     setPage(1)
+    setClientFilter('')
+    setStatusFilter('')
     setDateFrom('')
     setDateTo('')
   }

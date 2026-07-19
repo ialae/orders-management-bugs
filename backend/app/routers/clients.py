@@ -20,8 +20,9 @@ def list_clients(
     query = db.query(Client)
 
     if search:
-        pattern = f"%{search}%"
-        query = query.filter(or_(Client.name.ilike(pattern), Client.email.ilike(pattern)))
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        query = query.filter(or_(Client.name.ilike(pattern, escape="\\"), Client.email.ilike(pattern, escape="\\")))
 
     total = query.count()
     items = (

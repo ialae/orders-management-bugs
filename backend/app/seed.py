@@ -25,7 +25,7 @@ PRODUCTS = [
 
 
 def seed_if_empty(db: Session) -> None:
-    if db.query(Order).count() > 0:
+    if db.query(Client).count() > 0:
         return
 
     clients: list[Client] = []

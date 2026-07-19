@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,13 +7,17 @@ from app.database import Base, SessionLocal, engine
 from app.routers import clients, orders
 from app.seed import seed_if_empty
 
-SECRET_KEY = "dev-secret-please-change-12345"
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    if origin.strip()
+]
 
-app = FastAPI(title="Orders Management API", debug=True)
+app = FastAPI(title="Orders Management API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

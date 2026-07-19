@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -16,23 +16,25 @@ def list_orders(
     status: OrderStatus | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     query = db.query(Order).options(joinedload(Order.client))
 
     if client_id is not None:
         query = query.filter(Order.client_id == client_id)
+    if status is not None:
+        query = query.filter(Order.status == status)
     if date_from is not None:
-        query = query.filter(Order.order_date <= date_from)
+        query = query.filter(Order.order_date >= date_from)
     if date_to is not None:
-        query = query.filter(Order.order_date >= date_to)
+        query = query.filter(Order.order_date <= date_to)
 
     total = query.count()
     items = (
         query.order_by(Order.id.asc())
-        .offset(page * page_size)
+        .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
     )
@@ -57,6 +59,7 @@ def _ensure_client_exists(db: Session, client_id: int) -> None:
 
 @router.post("", response_model=OrderOut, status_code=201)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
+    _ensure_client_exists(db, payload.client_id)
     order = Order(**payload.model_dump())
     db.add(order)
     db.commit()
@@ -69,6 +72,8 @@ def update_order(order_id: int, payload: OrderUpdate, db: Session = Depends(get_
     order = db.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    _ensure_client_exists(db, payload.client_id)
 
     for key, value in payload.model_dump().items():
         setattr(order, key, value)

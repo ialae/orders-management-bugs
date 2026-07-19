@@ -6,7 +6,7 @@ from app.models import OrderStatus
 
 
 class ClientBase(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=255)
     email: EmailStr
     phone: str | None = Field(default=None, max_length=50)
     address: str | None = None
@@ -43,9 +43,9 @@ class ClientListOut(BaseModel):
 
 class OrderBase(BaseModel):
     client_id: int
-    product_name: str
-    quantity: int
-    unit_price: float
+    product_name: str = Field(min_length=1, max_length=255)
+    quantity: int = Field(gt=0)
+    unit_price: float = Field(gt=0)
     status: OrderStatus = OrderStatus.pending
     order_date: date
 

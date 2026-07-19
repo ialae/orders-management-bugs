@@ -104,9 +104,11 @@ Both `create_client` and `update_client` catch `IntegrityError` and return
 `index=True` without `unique=True`. There was no constraint to violate, so the handler was
 unreachable and duplicates saved happily.
 
-**Fix:** added `unique=True` to the column. The existing error handling now works as written.
-(Requires `docker compose down -v` to pick up on an existing volume, since `create_all`
-does not alter live tables.)
+**Fix:** added `unique=True` to the column, and normalize emails to lowercase in the schema
+so `CaseTest@` and `casetest@` can't coexist — emails are case-insensitive in practice, and a
+case-sensitive constraint would only half-close the hole. The existing error handling now
+works as written. (Requires `docker compose down -v` to pick up on an existing volume, since
+`create_all` does not alter live tables.)
 
 ### 12. Client updates silently dropped phone and address
 
@@ -132,7 +134,9 @@ the API is the actual boundary — anything hitting it directly could store nons
 propagated into totals.
 
 **Fix:** `Field(gt=0)` on both, plus a non-empty constraint on `product_name` and
-`Client.name`. The frontend check stays as fast feedback; the backend now enforces it.
+`Client.name`. Names are stripped before the length check so whitespace-only input
+(`" "`) is rejected rather than sneaking past `min_length=1`. The frontend check stays
+as fast feedback; the backend now enforces it.
 
 ---
 
@@ -152,8 +156,10 @@ endpoint.
 
 **Fix:** replaced the raw `text()` with SQLAlchemy column expressions
 (`Client.name.ilike(pattern)`), which bind the value as a parameter. The input can no longer
-be parsed as SQL regardless of its contents. Verified: `' OR '1'='1` now returns 0 results
-instead of the whole table.
+be parsed as SQL regardless of its contents. LIKE wildcards (`%`, `_`, `\`) are also escaped
+so they match literally — without that, `search=%` matches every row, which is a correctness
+bug rather than a security one but breaks the same feature. Verified: `' OR '1'='1` and `%`
+both return 0 results instead of the whole table.
 
 ### 16. Stored XSS in the clients table
 
@@ -276,4 +282,7 @@ fixing):
 | `POST` order, `quantity=0` | 201 | 422 |
 | `?page=0` / `?page_size=100000` | accepted | 422 |
 | Duplicate client email | 201 | 409 |
+| Duplicate email, different case | 201 | 409 |
+| `search=%` (LIKE wildcard) | all rows | 0 hits, matched literally |
+| `name="  "` (whitespace-only) | 201 | 422 |
 | CORS from `evil.example` | allowed | no header |

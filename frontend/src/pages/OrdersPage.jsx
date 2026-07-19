@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { clientsApi, ordersApi } from '../api.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import OrderForm from '../components/OrderForm.jsx'
@@ -13,6 +13,7 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [clientsError, setClientsError] = useState('')
 
   const [clientOptions, setClientOptions] = useState([])
   const [clientFilter, setClientFilter] = useState('')
@@ -26,15 +27,15 @@ export default function OrdersPage() {
   const [deletingOrder, setDeletingOrder] = useState(null)
 
   useEffect(() => {
-    clientsApi.options().then(setClientOptions).catch((err) => setError(err.message))
+    clientsApi.options().then(setClientOptions).catch((err) => setClientsError(err.message))
   }, [])
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
       const data = await ordersApi.list({
-        client_id: clientFilter || undefined,
+        client_id: clientFilter ? Number(clientFilter) : undefined,
         status: statusFilter || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
@@ -48,12 +49,11 @@ export default function OrdersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [clientFilter, dateFrom, dateTo, page, statusFilter])
 
   useEffect(() => {
     loadOrders()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, clientFilter, statusFilter, dateFrom, dateTo])
+  }, [loadOrders])
 
   function openCreateForm() {
     setEditingOrder(null)
@@ -67,6 +67,7 @@ export default function OrdersPage() {
 
   async function handleSave(payload) {
     setSaving(true)
+    setError('')
     try {
       if (editingOrder) {
         await ordersApi.update(editingOrder.id, payload)
@@ -75,19 +76,28 @@ export default function OrdersPage() {
       }
       setShowForm(false)
       await loadOrders()
+    } catch (err) {
+      setError(err.message)
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete() {
-    await ordersApi.remove(deletingOrder.id)
-    setDeletingOrder(null)
-    await loadOrders()
+    setError('')
+    try {
+      await ordersApi.remove(deletingOrder.id)
+      setDeletingOrder(null)
+      await loadOrders()
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   function resetFilters() {
     setPage(1)
+    setClientFilter('')
+    setStatusFilter('')
     setDateFrom('')
     setDateTo('')
   }
@@ -161,6 +171,7 @@ export default function OrdersPage() {
         </button>
       </div>
 
+      {clientsError && <div className="form-error">{clientsError}</div>}
       {error && <div className="form-error">{error}</div>}
 
       <div className="table-wrapper">
@@ -203,7 +214,7 @@ export default function OrdersPage() {
                       {STATUS_LABELS[order.status]}
                     </span>
                   </td>
-                  <td>{new Date(order.order_date).toLocaleDateString()}</td>
+                  <td>{new Date(order.order_date + 'T00:00:00').toLocaleDateString()}</td>
                   <td className="actions-cell">
                     <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
                       Edit

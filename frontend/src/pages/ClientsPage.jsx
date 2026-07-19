@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { clientsApi } from '../api.js'
 import ClientForm from '../components/ClientForm.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import Pagination from '../components/Pagination.jsx'
 
 const PAGE_SIZE = 10
@@ -16,8 +17,9 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deletingClient, setDeletingClient] = useState(null)
 
-  async function loadClients() {
+  const loadClients = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -29,12 +31,11 @@ export default function ClientsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, search])
 
   useEffect(() => {
     loadClients()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search])
+  }, [loadClients])
 
   function openCreateForm() {
     setEditingClient(null)
@@ -48,6 +49,7 @@ export default function ClientsPage() {
 
   async function handleSave(form) {
     setSaving(true)
+    setError('')
     try {
       if (editingClient) {
         await clientsApi.update(editingClient.id, form)
@@ -56,14 +58,23 @@ export default function ClientsPage() {
       }
       setShowForm(false)
       await loadClients()
+    } catch (err) {
+      setError(err.message)
+      throw err
     } finally {
       setSaving(false)
     }
   }
 
-  async function handleDelete(client) {
-    await clientsApi.remove(client.id)
-    await loadClients()
+  async function handleDelete() {
+    setError('')
+    try {
+      await clientsApi.remove(deletingClient.id)
+      setDeletingClient(null)
+      await loadClients()
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -86,6 +97,8 @@ export default function ClientsPage() {
           }}
         />
       </div>
+
+      {error && <div className="form-error">{error}</div>}
 
       <div className="table-wrapper">
         <table>
@@ -115,7 +128,7 @@ export default function ClientsPage() {
             ) : (
               clients.map((client) => (
                 <tr key={client.id}>
-                  <td dangerouslySetInnerHTML={{ __html: client.name }} />
+                  <td>{client.name}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>
@@ -127,7 +140,7 @@ export default function ClientsPage() {
                     <button
                       type="button"
                       className="btn-link btn-link-danger"
-                      onClick={() => handleDelete(client)}
+                      onClick={() => setDeletingClient(client)}
                     >
                       Delete
                     </button>
@@ -147,6 +160,15 @@ export default function ClientsPage() {
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {deletingClient && (
+        <ConfirmDialog
+          title="Delete Client"
+          message={`Are you sure you want to delete ${deletingClient.name}? This will also delete all their orders.`}
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingClient(null)}
         />
       )}
     </div>

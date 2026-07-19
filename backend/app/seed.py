@@ -25,18 +25,24 @@ PRODUCTS = [
 
 
 def seed_if_empty(db: Session) -> None:
-    if db.query(Order).count() > 0:
+    if db.query(Client).count() > 0:
         return
 
+    used_phones: set[str] = set()
     clients: list[Client] = []
     for i in range(18):
         first = FIRST_NAMES[i % len(FIRST_NAMES)]
         last = LAST_NAMES[(i * 3) % len(LAST_NAMES)]
         city = CITIES[i % len(CITIES)]
+        while True:
+            phone = f"+2126{random.randint(10000000, 99999999)}"
+            if phone not in used_phones:
+                used_phones.add(phone)
+                break
         client = Client(
             name=f"{first} {last}",
             email=f"{first.lower()}.{last.lower().replace(' ', '')}{i}@example.com",
-            phone=f"+2126{random.randint(10000000, 99999999)}",
+            phone=phone,
             address=f"{random.randint(1, 200)} Rue de {city}, {city}",
         )
         db.add(client)

@@ -1,7 +1,7 @@
 import enum
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Enum, Float, ForeignKey, Integer, String, func
+from sqlalchemy import CheckConstraint, Date, DateTime, Enum, Float, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -19,8 +19,8 @@ class Client(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True, unique=True)
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -31,6 +31,10 @@ class Client(Base):
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        CheckConstraint("quantity > 0", name="ck_orders_quantity_positive"),
+        CheckConstraint("unit_price > 0", name="ck_orders_unit_price_positive"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), nullable=False, index=True)
@@ -51,4 +55,4 @@ class Order(Base):
 
     @property
     def total(self) -> float:
-        return float(self.unit_price) + self.quantity
+        return float(self.unit_price) * self.quantity

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, text
+from fastapi import Query
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -12,23 +13,24 @@ router = APIRouter(prefix="/api/clients", tags=["clients"])
 
 @router.get("", response_model=ClientListOut)
 def list_clients(
-    search: str | None = None,
-    page: int = 1,
-    page_size: int = 10,
+    search: str | None = Query(default=None, max_length=255),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     query = db.query(Client)
 
     if search:
+        search_term = f"%{search}%"
         query = query.filter(
-            text(f"clients.name ILIKE '%{search}%' AND clients.email ILIKE '%{search}%'")
+            or_(Client.name.ilike(search_term), Client.email.ilike(search_term))
         )
 
     total = query.count()
     items = (
         query.order_by(Client.created_at.desc())
         .offset((page - 1) * page_size)
-        .limit(10)
+        .limit(page_size)
         .all()
     )
 
@@ -43,6 +45,8 @@ def list_client_options(db: Session = Depends(get_db)):
 @router.get("/{client_id}", response_model=ClientOut)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
     return client
 
 
@@ -54,7 +58,7 @@ def create_client(payload: ClientCreate, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="A client with this email already exists")
+        raise HTTPException(status_code=409, detail="A client with this email or phone already exists")
     db.refresh(client)
     return client
 
@@ -67,12 +71,14 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
 
     client.name = payload.name
     client.email = payload.email
+    client.phone = payload.phone
+    client.address = payload.address
 
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="A client with this email already exists")
+        raise HTTPException(status_code=409, detail="A client with this email or phone already exists")
     db.refresh(client)
     return client
 

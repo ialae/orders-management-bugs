@@ -60,6 +60,7 @@ export default function ClientsPage() {
       await loadClients()
     } catch (err) {
       setError(err.message)
+      throw err
     } finally {
       setSaving(false)
     }

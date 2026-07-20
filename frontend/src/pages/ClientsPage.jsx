@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { clientsApi } from '../api.js'
 import ClientForm from '../components/ClientForm.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import Pagination from '../components/Pagination.jsx'
 
 const PAGE_SIZE = 10
@@ -10,18 +11,24 @@ export default function ClientsPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deletingClient, setDeletingClient] = useState(null)
 
   async function loadClients() {
     setLoading(true)
     setError('')
     try {
-      const data = await clientsApi.list({ search, page, page_size: PAGE_SIZE })
+      const data = await clientsApi.list({
+        search: debouncedSearch || undefined,
+        page,
+        page_size: PAGE_SIZE,
+      })
       setClients(data.items)
       setTotal(data.total)
     } catch (err) {
@@ -32,9 +39,14 @@ export default function ClientsPage() {
   }
 
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
     loadClients()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search])
+  }, [page, debouncedSearch])
 
   function openCreateForm() {
     setEditingClient(null)
@@ -61,9 +73,15 @@ export default function ClientsPage() {
     }
   }
 
-  async function handleDelete(client) {
-    await clientsApi.remove(client.id)
-    await loadClients()
+  async function handleDelete() {
+    try {
+      await clientsApi.remove(deletingClient.id)
+      setDeletingClient(null)
+      await loadClients()
+    } catch (err) {
+      setDeletingClient(null)
+      setError(err.message)
+    }
   }
 
   return (
@@ -115,7 +133,7 @@ export default function ClientsPage() {
             ) : (
               clients.map((client) => (
                 <tr key={client.id}>
-                  <td dangerouslySetInnerHTML={{ __html: client.name }} />
+                  <td>{client.name}</td>
                   <td>{client.email}</td>
                   <td>{client.phone || '-'}</td>
                   <td>{client.address || '-'}</td>
@@ -127,7 +145,7 @@ export default function ClientsPage() {
                     <button
                       type="button"
                       className="btn-link btn-link-danger"
-                      onClick={() => handleDelete(client)}
+                      onClick={() => setDeletingClient(client)}
                     >
                       Delete
                     </button>
@@ -147,6 +165,15 @@ export default function ClientsPage() {
           saving={saving}
           onSave={handleSave}
           onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {deletingClient && (
+        <ConfirmDialog
+          title="Delete Client"
+          message={`Are you sure you want to delete ${deletingClient.name}? This will also delete their orders.`}
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingClient(null)}
         />
       )}
     </div>

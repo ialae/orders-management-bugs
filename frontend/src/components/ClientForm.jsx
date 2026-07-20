@@ -2,8 +2,18 @@ import { useState } from 'react'
 
 const EMPTY_FORM = { name: '', email: '', phone: '', address: '' }
 
+function toFormValues(client) {
+  if (!client) return EMPTY_FORM
+  return {
+    name: client.name ?? '',
+    email: client.email ?? '',
+    phone: client.phone ?? '',
+    address: client.address ?? '',
+  }
+}
+
 export default function ClientForm({ initialValues, onSave, onCancel, saving }) {
-  const [form, setForm] = useState(initialValues || EMPTY_FORM)
+  const [form, setForm] = useState(() => toFormValues(initialValues))
   const [error, setError] = useState('')
 
   function handleChange(e) {
@@ -37,14 +47,16 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
             Name
             <input name="name" value={form.name} onChange={handleChange} required />
           </label>
-          <span className="field-label">Email</span>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+          <label>
+            Email
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </label>
           <label>
             Phone
             <input name="phone" value={form.phone || ''} onChange={handleChange} />
@@ -57,7 +69,7 @@ export default function ClientForm({ initialValues, onSave, onCancel, saving }) 
             <button type="button" className="btn btn-secondary" onClick={onCancel}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? 'Saving...' : 'Save'}
             </button>
           </div>

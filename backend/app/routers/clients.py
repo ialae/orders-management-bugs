@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, text
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -21,14 +21,17 @@ def list_clients(
 
     if search:
         query = query.filter(
-            text(f"clients.name ILIKE '%{search}%' AND clients.email ILIKE '%{search}%'")
+            or_(
+                Client.name.ilike(f"%{search}%"),
+                Client.email.ilike(f"%{search}%")
+            )
         )
 
     total = query.count()
     items = (
         query.order_by(Client.created_at.desc())
         .offset((page - 1) * page_size)
-        .limit(10)
+        .limit(page_size)
         .all()
     )
 
@@ -43,6 +46,8 @@ def list_client_options(db: Session = Depends(get_db)):
 @router.get("/{client_id}", response_model=ClientOut)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     client = db.get(Client, client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
     return client
 
 
@@ -67,6 +72,8 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
 
     client.name = payload.name
     client.email = payload.email
+    client.phone = payload.phone
+    client.address = payload.address
 
     try:
         db.commit()

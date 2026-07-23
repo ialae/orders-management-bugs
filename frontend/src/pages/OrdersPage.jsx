@@ -90,6 +90,8 @@ export default function OrdersPage() {
     setPage(1)
     setDateFrom('')
     setDateTo('')
+    setClientFilter('')
+    setStatusFilter('')
   }
 
   return (
@@ -203,7 +205,7 @@ export default function OrdersPage() {
                       {STATUS_LABELS[order.status]}
                     </span>
                   </td>
-                  <td>{new Date(order.order_date).toLocaleDateString()}</td>
+                  <td>{new Date(`${order.order_date}T00:00:00`).toLocaleDateString()}</td>
                   <td className="actions-cell">
                     <button type="button" className="btn-link" onClick={() => openEditForm(order)}>
                       Edit

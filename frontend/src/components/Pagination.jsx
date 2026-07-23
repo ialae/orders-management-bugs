@@ -1,5 +1,5 @@
 export default function Pagination({ page, pageSize, total, onPageChange }) {
-  const totalPages = Math.max(1, Math.floor(total / pageSize))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
     <div className="pagination">
